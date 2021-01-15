@@ -1,12 +1,12 @@
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-void error(const char* message)
+static void error(const char* message)
 {
-    fprintf(stderr, message);
+    fprintf(stderr, "%s", message);
     glfwTerminate();
     exit(EXIT_FAILURE);
 }
@@ -26,7 +26,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    (void)scancode, mods;
+    (void)scancode;
+    (void)mods;
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
@@ -58,7 +59,7 @@ int main()
 
     // load gl
     glfwMakeContextCurrent(window);
-    gladLoadGL(glfwGetProcAddress);
+    gladLoadGL();
     glfwSwapInterval(1);
 
     // setup
