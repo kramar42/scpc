@@ -1,13 +1,25 @@
+# prerequisites
+
+`python3` & `pip` to install `grad` package
+
+on windows: command line with `vcvars64.bat` to run `msbuild.exe`, `cl.exe` & `link.exe`
+
+on linux/macos: `cc`, `pkg-config` & `glfw3` library
+
 # prepare
 
 build process relies on glfw distribution which you can get at https://github.com/glfw/glfw
 
-run `install_deps %PATH_TO_GLFW%` to prepare for building
+on windows: run `install_deps %PATH_TO_GLFW%` to prepare for building
+
+on linux/macos: `./install_deps.sh`
 
 # build
 
-`build`
+on windows: `build`
+
+on linux/macos: `./build.sh`
 
 # run
 
-`main`
+output is stored in `build`
