@@ -14,27 +14,28 @@ static const PGA2D pga2d_e012    = { 0, 0, 0, 0, 0, 0, 0, 1 };
 
 static const char* pga2d_basis[] = { "1","e0","e1","e2","e01","e02","e12","e012" };
 
-static PGA2Dp pga2d_new        ();
-static void   pga2d_print      (const PGA2D a);
+float  pga2d_norm       (const PGA2D a);
+float  pga2d_inorm      (const PGA2D a);
 
-static float  pga2d_norm       (const PGA2D a);
-static float  pga2d_inorm      (const PGA2D a);
-static PGA2Dp pga2d_normalized (const PGA2D a);
+PGA2Dp pga2d_normalized (PGA2D r, const PGA2D a);
+PGA2Dp pga2d_reverse    (PGA2D r, const PGA2D a);
+PGA2Dp pga2d_dual       (PGA2D r, const PGA2D a);
+PGA2Dp pga2d_conjugate  (PGA2D r, const PGA2D a);
+PGA2Dp pga2d_involute   (PGA2D r, const PGA2D a);
 
-static PGA2Dp pga2d_reverse    (const PGA2D a);
-static PGA2Dp pga2d_dual       (const PGA2D a);
-static PGA2Dp pga2d_conjugate  (const PGA2D a);
-static PGA2Dp pga2d_involute   (const PGA2D a);
+PGA2Dp pga2d_add        (PGA2D r, const PGA2D a, const PGA2D b);
+PGA2Dp pga2d_add3       (PGA2D r, const PGA2D a, const PGA2D b, const PGA2D c);
+PGA2Dp pga2d_add_va     (PGA2D r, size_t size, ...);
+PGA2Dp pga2d_adds       (PGA2D r, const PGA2D a, const float b);
 
-static PGA2Dp pga2d_add        (const PGA2D a, const PGA2D b);
-static PGA2Dp pga2d_adds       (const PGA2D a, const float b);
-static PGA2Dp pga2d_sub        (const PGA2D a, const PGA2D b);
-static PGA2Dp pga2d_subs       (const PGA2D a, const float b);
-static PGA2Dp pga2d_mul        (const PGA2D a, const PGA2D b);
-static PGA2Dp pga2d_muls       (const PGA2D a, const float b);
+PGA2Dp pga2d_sub        (PGA2D r, const PGA2D a, const PGA2D b);
+PGA2Dp pga2d_subs       (PGA2D r, const PGA2D a, const float b);
 
-static PGA2Dp pga2d_wedge      (const PGA2D a, const PGA2D b);
-static PGA2Dp pga2d_regressive (const PGA2D a, const PGA2D b);
-static PGA2Dp pga2d_inner      (const PGA2D a, const PGA2D b);
+PGA2Dp pga2d_mul        (PGA2D r, const PGA2D a, const PGA2D b);
+PGA2Dp pga2d_muls       (PGA2D r, const PGA2D a, const float b);
+
+PGA2Dp pga2d_wedge      (PGA2D r, const PGA2D a, const PGA2D b);
+PGA2Dp pga2d_regressive (PGA2D r, const PGA2D a, const PGA2D b);
+PGA2Dp pga2d_inner      (PGA2D r, const PGA2D a, const PGA2D b);
 
 #endif

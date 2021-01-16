@@ -8,247 +8,224 @@
 
 #include "pga2d.h"
 
-static PGA2Dp pga2d_new()
-{
-  return malloc(sizeof(PGA2D));
-}
-
-static void pga2d_print(const PGA2D a)
-{
-  size_t n = 0;
-  for (size_t i = 0, j = 0; i < 8; i++)
-    if (a[i] != 0.0f)
-    {
-      n++;
-      printf("%s%0.7g%s",
-        // sign between terms
-        (j > 0) ? " + " : "",
-        // coeff
-        a[i],
-        (i == 0) ? "" : pga2d_basis[i]);
-      j++;
-    };
-    if (n==0) printf("0");
-    printf("\n");
-}
-
 // Norm
-static float pga2d_norm(const PGA2D a)
+float pga2d_norm(const PGA2D a)
 {
-  PGA2Dp c = pga2d_conjugate(a);
-  PGA2Dp m = pga2d_mul(a, c);
-  float r = sqrtf(fabsf(m[0]));
-  free(c); free(m);
-  return r;
+  PGA2D conj = {0}, mul = {0};
+  return sqrtf(fabsf(
+    pga2d_mul(
+      mul,
+      pga2d_conjugate(conj, a),
+      a)
+    [0]));
 }
 
 // Inverse norm
-static float pga2d_inorm(const PGA2D a)
+float pga2d_inorm(const PGA2D a)
 {
-  PGA2Dp d = pga2d_dual(a);
-  float r = pga2d_norm(d);
-  free(d);
-  return r;
+  PGA2D dual = {0};
+  pga2d_dual(dual, a);
+  return pga2d_norm(dual);
 }
 
 // Normalize
-static PGA2Dp pga2d_normalized(const PGA2D a)
+PGA2Dp pga2d_normalized(PGA2D r, const PGA2D a)
 {
   float n = 1 / pga2d_norm(a);
-  return pga2d_muls(a, n);
+  return pga2d_muls(r, a, n);
 }
 
 // Reverse the order of the basis blades
-static PGA2Dp pga2d_reverse(const PGA2D a)
+PGA2Dp pga2d_reverse(PGA2D r, const PGA2D a)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] =  a[0];
-  res[1] =  a[1];
-  res[2] =  a[2];
-  res[3] =  a[3];
-  res[4] = -a[4];
-  res[5] = -a[5];
-  res[6] = -a[6];
-  res[7] = -a[7];
-  return res;
+  r[0] =  a[0];
+  r[1] =  a[1];
+  r[2] =  a[2];
+  r[3] =  a[3];
+  r[4] = -a[4];
+  r[5] = -a[5];
+  r[6] = -a[6];
+  r[7] = -a[7];
+  return r;
 };
 
 // Poincare duality operator
-static PGA2Dp pga2d_dual(const PGA2D a)
+PGA2Dp pga2d_dual(PGA2D r, const PGA2D a)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = a[7];
-  res[1] = a[6];
-  res[2] = a[5];
-  res[3] = a[4];
-  res[4] = a[3];
-  res[5] = a[2];
-  res[6] = a[1];
-  res[7] = a[0];
-  return res;
+  r[0] = a[7];
+  r[1] = a[6];
+  r[2] = a[5];
+  r[3] = a[4];
+  r[4] = a[3];
+  r[5] = a[2];
+  r[6] = a[1];
+  r[7] = a[0];
+  return r;
 };
 
 // Clifford conjugation
-static PGA2Dp pga2d_conjugate(const PGA2D a)
+PGA2Dp pga2d_conjugate(PGA2D r, const PGA2D a)
 {
-  PGA2Dp res = pga2d_new();
-  res[0]=  a[0];
-  res[1]= -a[1];
-  res[2]= -a[2];
-  res[3]= -a[3];
-  res[4]= -a[4];
-  res[5]= -a[5];
-  res[6]= -a[6];
-  res[7]=  a[7];
-  return res;
+  r[0]=  a[0];
+  r[1]= -a[1];
+  r[2]= -a[2];
+  r[3]= -a[3];
+  r[4]= -a[4];
+  r[5]= -a[5];
+  r[6]= -a[6];
+  r[7]=  a[7];
+  return r;
 };
 
 // Main involution
-static PGA2Dp pga2d_involute(const PGA2D a)
+PGA2Dp pga2d_involute(PGA2D r, const PGA2D a)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] =  a[0];
-  res[1] = -a[1];
-  res[2] = -a[2];
-  res[3] = -a[3];
-  res[4] =  a[4];
-  res[5] =  a[5];
-  res[6] =  a[6];
-  res[7] = -a[7];
-  return res;
+  r[0] =  a[0];
+  r[1] = -a[1];
+  r[2] = -a[2];
+  r[3] = -a[3];
+  r[4] =  a[4];
+  r[5] =  a[5];
+  r[6] =  a[6];
+  r[7] = -a[7];
+  return r;
 };
 
 // Multivector addition
-static PGA2Dp pga2d_add(const PGA2D a, const PGA2D b)
+PGA2Dp pga2d_add(PGA2D r, const PGA2D a, const PGA2D b)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = a[0] + b[0];
-  res[1] = a[1] + b[1];
-  res[2] = a[2] + b[2];
-  res[3] = a[3] + b[3];
-  res[4] = a[4] + b[4];
-  res[5] = a[5] + b[5];
-  res[6] = a[6] + b[6];
-  res[7] = a[7] + b[7];
-  return res;
+  r[0] = a[0] + b[0];
+  r[1] = a[1] + b[1];
+  r[2] = a[2] + b[2];
+  r[3] = a[3] + b[3];
+  r[4] = a[4] + b[4];
+  r[5] = a[5] + b[5];
+  r[6] = a[6] + b[6];
+  r[7] = a[7] + b[7];
+  return r;
+};
+
+PGA2Dp pga2d_add3(PGA2D r, const PGA2D a, const PGA2D b, const PGA2D c)
+{
+  r[0] = a[0] + b[0] + c[0];
+  r[1] = a[1] + b[1] + c[1];
+  r[2] = a[2] + b[2] + c[2];
+  r[3] = a[3] + b[3] + c[3];
+  r[4] = a[4] + b[4] + c[4];
+  r[5] = a[5] + b[5] + c[5];
+  r[6] = a[6] + b[6] + c[6];
+  r[7] = a[7] + b[7] + c[7];
+  return r;
 };
 
 // Multivector/scalar addition
-static PGA2Dp pga2d_adds(const PGA2D a, const float b)
+PGA2Dp pga2d_adds(PGA2D r, const PGA2D a, const float b)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = a[0] + b;
-  res[1] = a[1];
-  res[2] = a[2];
-  res[3] = a[3];
-  res[4] = a[4];
-  res[5] = a[5];
-  res[6] = a[6];
-  res[7] = a[7];
-  return res;
+  r[0] = a[0] + b;
+  r[1] = a[1];
+  r[2] = a[2];
+  r[3] = a[3];
+  r[4] = a[4];
+  r[5] = a[5];
+  r[6] = a[6];
+  r[7] = a[7];
+  return r;
 };
 
 // Multivector subtraction
-static PGA2Dp pga2d_sub(const PGA2D a, const PGA2D b)
+PGA2Dp pga2d_sub(PGA2D r, const PGA2D a, const PGA2D b)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = a[0] - b[0];
-  res[1] = a[1] - b[1];
-  res[2] = a[2] - b[2];
-  res[3] = a[3] - b[3];
-  res[4] = a[4] - b[4];
-  res[5] = a[5] - b[5];
-  res[6] = a[6] - b[6];
-  res[7] = a[7] - b[7];
-  return res;
+  r[0] = a[0] - b[0];
+  r[1] = a[1] - b[1];
+  r[2] = a[2] - b[2];
+  r[3] = a[3] - b[3];
+  r[4] = a[4] - b[4];
+  r[5] = a[5] - b[5];
+  r[6] = a[6] - b[6];
+  r[7] = a[7] - b[7];
+  return r;
 };
 
 // Multivector/scalar subtraction
-static PGA2Dp pga2d_subs(const PGA2D a, const float b)
+PGA2Dp pga2d_subs(PGA2D r, const PGA2D a, const float b)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = a[0] - b;
-  res[1] = a[1];
-  res[2] = a[2];
-  res[3] = a[3];
-  res[4] = a[4];
-  res[5] = a[5];
-  res[6] = a[6];
-  res[7] = a[7];
-  return res;
+  r[0] = a[0] - b;
+  r[1] = a[1];
+  r[2] = a[2];
+  r[3] = a[3];
+  r[4] = a[4];
+  r[5] = a[5];
+  r[6] = a[6];
+  r[7] = a[7];
+  return r;
 };
 
 // The geometric product
-static PGA2Dp pga2d_mul(const PGA2D a, const PGA2D b)
+PGA2Dp pga2d_mul(PGA2D r, const PGA2D a, const PGA2D b)
 {
-  PGA2Dp res = pga2d_new();
-  res [0] = b[0]*a[0] + b[2]*a[2] + b[3]*a[3] - b[6]*a[6];
-  res [1] = b[1]*a[0] + b[0]*a[1] - b[4]*a[2] - b[5]*a[3] + b[2]*a[4] + b[3]*a[5] - b[7]*a[6] - b[6]*a[7];
-  res [2] = b[2]*a[0] + b[0]*a[2] - b[6]*a[3] + b[3]*a[6];
-  res [3] = b[3]*a[0] + b[6]*a[2] + b[0]*a[3] - b[2]*a[6];
-  res [4] = b[4]*a[0] + b[2]*a[1] - b[1]*a[2] + b[7]*a[3] + b[0]*a[4] - b[6]*a[5] + b[5]*a[6] + b[3]*a[7];
-  res [5] = b[5]*a[0] + b[3]*a[1] - b[7]*a[2] - b[1]*a[3] + b[6]*a[4] + b[0]*a[5] - b[4]*a[6] - b[2]*a[7];
-  res [6] = b[6]*a[0] + b[3]*a[2] - b[2]*a[3] + b[0]*a[6];
-  res [7] = b[7]*a[0] + b[6]*a[1] - b[5]*a[2] + b[4]*a[3] + b[3]*a[4] - b[2]*a[5] + b[1]*a[6] + b[0]*a[7];
-  return res;
+  r[0] = b[0]*a[0] + b[2]*a[2] + b[3]*a[3] - b[6]*a[6];
+  r[1] = b[1]*a[0] + b[0]*a[1] - b[4]*a[2] - b[5]*a[3] + b[2]*a[4] + b[3]*a[5] - b[7]*a[6] - b[6]*a[7];
+  r[2] = b[2]*a[0] + b[0]*a[2] - b[6]*a[3] + b[3]*a[6];
+  r[3] = b[3]*a[0] + b[6]*a[2] + b[0]*a[3] - b[2]*a[6];
+  r[4] = b[4]*a[0] + b[2]*a[1] - b[1]*a[2] + b[7]*a[3] + b[0]*a[4] - b[6]*a[5] + b[5]*a[6] + b[3]*a[7];
+  r[5] = b[5]*a[0] + b[3]*a[1] - b[7]*a[2] - b[1]*a[3] + b[6]*a[4] + b[0]*a[5] - b[4]*a[6] - b[2]*a[7];
+  r[6] = b[6]*a[0] + b[3]*a[2] - b[2]*a[3] + b[0]*a[6];
+  r[7] = b[7]*a[0] + b[6]*a[1] - b[5]*a[2] + b[4]*a[3] + b[3]*a[4] - b[2]*a[5] + b[1]*a[6] + b[0]*a[7];
+  return r;
 };
 
 // Multivector/scalar multiplication
-static PGA2Dp pga2d_muls(const PGA2D a, const float b)
+PGA2Dp pga2d_muls(PGA2D r, const PGA2D a, const float b)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = a[0]*b;
-  res[1] = a[1]*b;
-  res[2] = a[2]*b;
-  res[3] = a[3]*b;
-  res[4] = a[4]*b;
-  res[5] = a[5]*b;
-  res[6] = a[6]*b;
-  res[7] = a[7]*b;
-  return res;
+  r[0] = a[0]*b;
+  r[1] = a[1]*b;
+  r[2] = a[2]*b;
+  r[3] = a[3]*b;
+  r[4] = a[4]*b;
+  r[5] = a[5]*b;
+  r[6] = a[6]*b;
+  r[7] = a[7]*b;
+  return r;
 };
 
 // The outer product (MEET)
-static PGA2Dp pga2d_wedge(const PGA2D a, const PGA2D b)
+PGA2Dp pga2d_wedge(PGA2D r, const PGA2D a, const PGA2D b)
 {
-  PGA2Dp res = pga2d_new();
-  res [0] = b[0]*a[0];
-  res [1] = b[1]*a[0] + b[0]*a[1];
-  res [2] = b[2]*a[0] + b[0]*a[2];
-  res [3] = b[3]*a[0] + b[0]*a[3];
-  res [4] = b[4]*a[0] + b[2]*a[1] - b[1]*a[2] + b[0]*a[4];
-  res [5] = b[5]*a[0] + b[3]*a[1] - b[1]*a[3] + b[0]*a[5];
-  res [6] = b[6]*a[0] + b[3]*a[2] - b[2]*a[3] + b[0]*a[6];
-  res [7] = b[7]*a[0] + b[6]*a[1] - b[5]*a[2] + b[4]*a[3] + b[3]*a[4] - b[2]*a[5] + b[1]*a[6] + b[0]*a[7];
-  return res;
+  r [0] = b[0]*a[0];
+  r [1] = b[1]*a[0] + b[0]*a[1];
+  r [2] = b[2]*a[0] + b[0]*a[2];
+  r [3] = b[3]*a[0] + b[0]*a[3];
+  r [4] = b[4]*a[0] + b[2]*a[1] - b[1]*a[2] + b[0]*a[4];
+  r [5] = b[5]*a[0] + b[3]*a[1] - b[1]*a[3] + b[0]*a[5];
+  r [6] = b[6]*a[0] + b[3]*a[2] - b[2]*a[3] + b[0]*a[6];
+  r [7] = b[7]*a[0] + b[6]*a[1] - b[5]*a[2] + b[4]*a[3] + b[3]*a[4] - b[2]*a[5] + b[1]*a[6] + b[0]*a[7];
+  return r;
 };
 
 // The regressive product (JOIN)
-static PGA2Dp pga2d_regressive(const PGA2D a, const PGA2D b)
+PGA2Dp pga2d_regressive(PGA2D r, const PGA2D a, const PGA2D b)
 {
-  PGA2Dp res = pga2d_new();
-  res[7] = a[7]*b[7];
-  res[6] = a[6]*b[7] + a[7]*b[6];
-  res[5] = a[5]*b[7] + a[7]*b[5];
-  res[4] = a[4]*b[7] + a[7]*b[4];
-  res[3] = a[3]*b[7] - a[5]*b[6] + a[6]*b[5] + a[7]*b[3];
-  res[2] = a[2]*b[7] - a[4]*b[6] + a[6]*b[4] + a[7]*b[2];
-  res[1] = a[1]*b[7] - a[4]*b[5] + a[5]*b[4] + a[7]*b[1];
-  res[0] = a[0]*b[7] + a[1]*b[6] - a[2]*b[5] + a[3]*b[4] + a[4]*b[3] - a[5]*b[2] + a[6]*b[1] + a[7]*b[0];
-  return res;
+  r[7] = a[7]*b[7];
+  r[6] = a[6]*b[7] + a[7]*b[6];
+  r[5] = a[5]*b[7] + a[7]*b[5];
+  r[4] = a[4]*b[7] + a[7]*b[4];
+  r[3] = a[3]*b[7] - a[5]*b[6] + a[6]*b[5] + a[7]*b[3];
+  r[2] = a[2]*b[7] - a[4]*b[6] + a[6]*b[4] + a[7]*b[2];
+  r[1] = a[1]*b[7] - a[4]*b[5] + a[5]*b[4] + a[7]*b[1];
+  r[0] = a[0]*b[7] + a[1]*b[6] - a[2]*b[5] + a[3]*b[4] + a[4]*b[3] - a[5]*b[2] + a[6]*b[1] + a[7]*b[0];
+  return r;
 };
 
 // The inner product
-static PGA2Dp pga2d_inner(const PGA2D a, const PGA2D b)
+PGA2Dp pga2d_inner(PGA2D r, const PGA2D a, const PGA2D b)
 {
-  PGA2Dp res = pga2d_new();
-  res[0] = b[0]*a[0] + b[2]*a[2] + b[3]*a[3] - b[6]*a[6];
-  res[1] = b[1]*a[0] + b[0]*a[1] - b[4]*a[2] - b[5]*a[3] + b[2]*a[4] + b[3]*a[5] - b[7]*a[6] - b[6]*a[7];
-  res[2] = b[2]*a[0] + b[0]*a[2] - b[6]*a[3] + b[3]*a[6];
-  res[3] = b[3]*a[0] + b[6]*a[2] + b[0]*a[3] - b[2]*a[6];
-  res[4] = b[4]*a[0] + b[7]*a[3] + b[0]*a[4] + b[3]*a[7];
-  res[5] = b[5]*a[0] - b[7]*a[2] + b[0]*a[5] - b[2]*a[7];
-  res[6] = b[6]*a[0] + b[0]*a[6];
-  res[7] = b[7]*a[0] + b[0]*a[7];
-  return res;
+  r[0] = b[0]*a[0] + b[2]*a[2] + b[3]*a[3] - b[6]*a[6];
+  r[1] = b[1]*a[0] + b[0]*a[1] - b[4]*a[2] - b[5]*a[3] + b[2]*a[4] + b[3]*a[5] - b[7]*a[6] - b[6]*a[7];
+  r[2] = b[2]*a[0] + b[0]*a[2] - b[6]*a[3] + b[3]*a[6];
+  r[3] = b[3]*a[0] + b[6]*a[2] + b[0]*a[3] - b[2]*a[6];
+  r[4] = b[4]*a[0] + b[7]*a[3] + b[0]*a[4] + b[3]*a[7];
+  r[5] = b[5]*a[0] - b[7]*a[2] + b[0]*a[5] - b[2]*a[7];
+  r[6] = b[6]*a[0] + b[0]*a[6];
+  r[7] = b[7]*a[0] + b[0]*a[7];
+  return r;
 };
