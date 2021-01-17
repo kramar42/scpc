@@ -7,7 +7,13 @@ typedef struct {
 } Client;
 
 typedef struct {
+  int x;
+  int y;
+} Cursor;
+
+typedef struct {
   Client client;
+  Cursor cursor;
 } Mind;
 
 Mind self = {0};

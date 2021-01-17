@@ -1,7 +1,6 @@
 #ifndef _gl_h_
 #define _gl_h_
 
-#include <GLFW/glfw3.h>
 #include "main.h"
 
 static void success()
@@ -17,11 +16,22 @@ static void error(const char* message)
   exit(EXIT_FAILURE);
 }
 
-
 static void error_callback(int code, const char* description)
 {
   (void)code;
   error(description);
+}
+
+static void gl_point(int x, int y)
+{
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0.0, 640.0, 480.0, 0.0, 0.0, 50.0);
+
+  glBegin(GL_POINTS);
+  glColor3f(1,1,1);
+  glVertex2i(x, y);
+  glEnd();
 }
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -56,10 +66,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 static void cursor_callback(GLFWwindow* window, double x, double y)
 {
   (void)window;
-  printf("x: %f y: %f\n", x, y);
+  self.cursor.x = (int)x;
+  self.cursor.y = (int)y;
+  printf("x: %d, y: %d\n", self.cursor.x, self.cursor.y);
 }
 
-static GLFWwindow*  gl_init()
+static GLFWwindow* gl_init()
 {
   // init
   glfwSetErrorCallback(error_callback);
@@ -73,7 +85,7 @@ static GLFWwindow*  gl_init()
   if (!window) error("Failed to open GLFW window\n");
 
   // mouse
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   if (glfwRawMouseMotionSupported())
     glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
@@ -89,19 +101,5 @@ static GLFWwindow*  gl_init()
 
   return window;
 }
-
-/*
-static void gl_point(float x, float y)
-{
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0.0, self.client.width, self.client.height, 0.0);
-
-  glBegin(GL_POINTS);
-  glColor3f(1,1,1);
-  glVertex2i(x, y);
-  glEnd();
-}
-*/
 
 #endif _gl_h_

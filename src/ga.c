@@ -22,46 +22,46 @@ void ga_print(const PGA2D a)
     printf("\n");
 }
 
-PGA2Dp ga_point(PGA2Dp point, const float x, const float y)
+PGA2Dp ga_point(PGA2D point, const float x, const float y)
 {
-	PGA2D xe = {0}, ye = {0};
-	return pga2d_add3(
-		point,
-		pga2d_muls(xe, pga2d_e02, -x),
-		pga2d_muls(ye, pga2d_e01, y),
-		pga2d_e12);
+  PGA2D xe = {0}, ye = {0};
+  return pga2d_add3(
+    point,
+    pga2d_muls(xe, pga2d_e02, -x),
+    pga2d_muls(ye, pga2d_e01, y),
+    pga2d_e12);
 }
 
-PGA2Dp ga_line(PGA2Dp line, const float a, const float b, const float c)
+PGA2Dp ga_line(PGA2D line, const float a, const float b, const float c)
 {
-	PGA2D ae = {0}, be = {0}, ce = {0};
-	return pga2d_add3(
-		line,
-		pga2d_muls(ae, pga2d_e1, a),
-		pga2d_muls(be, pga2d_e2, b),
-		pga2d_muls(ce, pga2d_e0, c));
+  PGA2D ae = {0}, be = {0}, ce = {0};
+  return pga2d_add3(
+    line,
+    pga2d_muls(ae, pga2d_e1, a),
+    pga2d_muls(be, pga2d_e2, b),
+    pga2d_muls(ce, pga2d_e0, c));
 }
 
-PGA2Dp ga_rotor(PGA2Dp rotor, PGA2D point, float angle)
+PGA2Dp ga_rotor(PGA2D rotor, const PGA2D point, const float angle)
 {
-	PGA2D pn = {0};
-	return pga2d_adds(
-		rotor,
-		pga2d_muls(
-			pn,
-			pga2d_normalized(pn, point),
-			sinf(angle / 2.0f)),
-		cosf(angle / 2.0f));
+  PGA2D pn = {0};
+  return pga2d_adds(
+    rotor,
+    pga2d_muls(
+      pn,
+      pga2d_normalized(pn, point),
+      sinf(angle / 2.0f)),
+    cosf(angle / 2.0f));
 }
 
-PGA2Dp ga_translator(PGA2Dp translator, PGA2D point, float dist)
+PGA2Dp ga_translator(PGA2D translator, const PGA2D point, const float dist)
 {
-	PGA2D pn = {0};
-	return pga2d_adds(
-		translator,
-		pga2d_muls(
-			pn,
-			point,
-			dist / 2.0f),
-		1.0f);
+  PGA2D pn = {0};
+  return pga2d_adds(
+    translator,
+    pga2d_muls(
+      pn,
+      point,
+      dist / 2.0f),
+    1.0f);
 }

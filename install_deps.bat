@@ -2,6 +2,9 @@
 
 if "%~1" == "" echo "Specify GLFW location" && exit /b
 
+rem delete old files
+del deps include /q
+
 pushd .
 cd %1
 
@@ -21,7 +24,7 @@ copy %1\include\GLFW include\GLFW
 
 rem requires package to be installed: pip3 install glad
 rem generate glad files
-python3 -m glad --profile core --out-path %tmp%\glad --api gl=3.2 --generator c --spec gl
+python3 -m glad --profile compatibility --out-path %tmp%\glad --api gl=3.3 --generator c --spec gl --extensions=GL_ARB_multisample,GL_ARB_robustness,GL_KHR_debug
 
 rem copy headers
 if not exist include\glad mkdir include\glad

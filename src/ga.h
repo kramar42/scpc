@@ -5,9 +5,9 @@
 
 void   ga_print      (const PGA2D a);
 
-PGA2Dp ga_point      (PGA2Dp point,      const float x, const float y);
-PGA2Dp ga_line       (PGA2Dp line,       const float a, const float b, const float c);
-PGA2Dp ga_rotor      (PGA2Dp rotor,      PGA2D point, float angle);
-PGA2Dp ga_translator (PGA2Dp translator, PGA2D point, float dist);
+PGA2Dp ga_point      (PGA2D point,      const float x, const float y);
+PGA2Dp ga_line       (PGA2D line,       const float a, const float b, const float c);
+PGA2Dp ga_rotor      (PGA2D rotor,      const PGA2D point, const float angle);
+PGA2Dp ga_translator (PGA2D translator, const PGA2D point, const float dist);
 
 #endif
