@@ -1,6 +1,8 @@
 #ifndef _main_h_
 #define _main_h_
 
+#include <stdlib.h>
+
 typedef struct {
   int width;
   int height;
@@ -16,6 +18,9 @@ typedef struct {
   Cursor cursor;
 } Mind;
 
-Mind self = {0};
+Mind self;
+
+void success();
+void error(const char* message);
 
 #endif
