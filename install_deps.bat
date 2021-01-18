@@ -24,7 +24,7 @@ copy %1\include\GLFW include\GLFW
 
 rem requires package to be installed: pip3 install glad
 rem generate glad files
-python3 -m glad --profile compatibility --out-path %tmp%\glad --api gl=3.3 --generator c --spec gl --extensions=GL_ARB_multisample,GL_ARB_robustness,GL_KHR_debug
+python3 -m glad --profile core --out-path %tmp%\glad --api gl=3.3 --generator c --spec gl --extensions=
 
 rem copy headers
 if not exist include\glad mkdir include\glad
