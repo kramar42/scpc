@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "pga2d.h"
 
@@ -50,8 +51,8 @@ PGA2Dp ga_rotor(PGA2D rotor, const PGA2D point, const float angle)
     pga2d_muls(
       pn,
       pga2d_normalized(pn, point),
-      sinf(angle / 2.0f)),
-    cosf(angle / 2.0f));
+      sinf(angle)),
+    cosf(angle));
 }
 
 PGA2Dp ga_translator(PGA2D translator, const PGA2D point, const float dist)
@@ -64,4 +65,14 @@ PGA2Dp ga_translator(PGA2D translator, const PGA2D point, const float dist)
       point,
       dist / 2.0f),
     1.0f);
+}
+
+PGA2Dp ga_transform(PGA2D result, const PGA2D trans, const PGA2D elem)
+{
+  PGA2D tmp = {0}, trans_rev = {0};
+  pga2d_reverse(trans_rev, trans);
+  return pga2d_mul(
+    result,
+    pga2d_mul(tmp, trans, elem),
+    trans_rev);
 }

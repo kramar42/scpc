@@ -14,11 +14,12 @@ static void error_callback(int code, const char* description)
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-  (void) window;
+  (void)window;
   glViewport(0, 0, width, height);
 
   self.client.width = width;
   self.client.height = height;
+  self.client.aspect = ((float) width) / height;
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -34,7 +35,6 @@ static void cursor_callback(GLFWwindow* window, double x, double y)
   (void)window;
   self.cursor.x = (int)x;
   self.cursor.y = (int)y;
-  printf("x: %d, y: %d\n", self.cursor.x, self.cursor.y);
 }
 
 static void gl_check_shader(uint32_t sid)
@@ -66,13 +66,13 @@ static void gl_check_program(uint32_t pid)
 static uint32_t gl_shader(const char* shader_filename, uint32_t shader_type)
 {
   size_t filesize;
-  char* shader_source = slurp_file(shader_filename, &filesize);
+  const char* shader_source = slurp_file(shader_filename, &filesize);
 
   uint32_t shader = glCreateShader(shader_type);
   glShaderSource(shader, 1, &shader_source, NULL);
   glCompileShader(shader);
   gl_check_shader(shader);
-  free(shader_source);
+  free((void*)shader_source);
   return shader;
 }
 
@@ -122,12 +122,15 @@ GLFWwindow* gl_init()
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+  GLFWmonitor* monitor = NULL;
+  if (self.client.fullscreen) monitor = glfwGetPrimaryMonitor();
+
   // window
-  GLFWwindow* window = glfwCreateWindow(self.client.width, self.client.height, "SCPC", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(self.client.width, self.client.height, "SCPC", monitor, NULL);
   if (!window) error("Failed to open GLFW window\n");
 
   // mouse
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
   if (glfwRawMouseMotionSupported())
     glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 

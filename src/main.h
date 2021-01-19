@@ -2,10 +2,15 @@
 #define _main_h_
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct {
   int width;
   int height;
+  float aspect;
+  bool fullscreen;
+  double last_frame;
+  double avg_fps;
 } Client;
 
 typedef struct {

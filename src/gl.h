@@ -8,4 +8,4 @@ uint32_t    gl_program     (const char* vertex_filename, const char* fragment_fi
 void        gl_set_ufloat  (uint32_t program, const char* uniform, float value);
 void        gl_set_u2float (uint32_t program, const char* uniform, float first, float second);
 
-#endif _gl_h_
+#endif // _gl_h_
