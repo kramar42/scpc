@@ -9,13 +9,16 @@ typedef struct {
   int height;
   float aspect;
   bool fullscreen;
+  bool vsync;
   double last_frame;
   double avg_fps;
 } Client;
 
 typedef struct {
-  int x;
-  int y;
+  int    x;
+  int    y;
+  double scroll;
+  double scale;
 } Cursor;
 
 typedef struct {

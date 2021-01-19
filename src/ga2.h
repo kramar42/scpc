@@ -1,5 +1,5 @@
-#ifndef _pga2d_h_
-#define _pga2d_h_
+#ifndef _ga2_h_
+#define _ga2_h_
 
 typedef float  GA2[8];
 typedef float* GA2p;
@@ -25,6 +25,8 @@ GA2p  ga2_transform     (GA2 r, const GA2 trans, const GA2 elem);
 float ga2_norm          (const GA2 x);
 float ga2_inorm         (const GA2 x);
 
+float ga2_distance      (const GA2 a, const GA2 b);
+
 GA2p  ga2_normalized    (GA2 r, const GA2 a);
 GA2p  ga2_reverse       (GA2 r, const GA2 a);
 GA2p  ga2_dual          (GA2 r, const GA2 a);
@@ -46,4 +48,4 @@ GA2p  ga2_wedge         (GA2 r, const GA2 a, const GA2 b);
 GA2p  ga2_regressive    (GA2 r, const GA2 a, const GA2 b);
 GA2p  ga2_inner         (GA2 r, const GA2 a, const GA2 b);
 
-#endif // _pga2d_h
+#endif // _ga2_h

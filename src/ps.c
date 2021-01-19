@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ps.h"
 
@@ -11,7 +12,7 @@ Channel* new_chan(size_t capacity)
   c->full     = false;
   c->data     = (double*)malloc(capacity * sizeof(double));
   memset(c->data, 0, capacity * sizeof(double));
-  printf("chan: %p, offset: %p, end: %p\n", c, c->data, c->data + capacity);
+  // printf("chan: %p, offset: %p, end: %p\n", c, c->data, c->data + capacity);
   return c;
 }
 

@@ -8,3 +8,5 @@ mkdir -p include/glad
 mv /tmp/glad/include/glad/* include/glad
 mkdir -p deps
 mv /tmp/glad/src/* deps
+
+curl https://raw.githubusercontent.com/nothings/stb/master/stb_ds.h -o include/std_ds.h

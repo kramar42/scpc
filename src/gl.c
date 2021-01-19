@@ -36,6 +36,13 @@ static void cursor_callback(GLFWwindow* window, double x, double y)
   self.cursor.y = (int)y;
 }
 
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  (void)window; (void)xoffset; (void)yoffset;
+  // printf("offset: %f\n", yoffset);
+  // self.cursor.scroll += yoffset * self.cursor.scale;
+}
+
 static void gl_check_shader(uint32_t sid)
 {
   int code;
@@ -137,11 +144,12 @@ GLFWwindow* gl_init()
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   glfwSetKeyCallback(window, key_callback);
   glfwSetCursorPosCallback(window, cursor_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   // load gl
   glfwMakeContextCurrent(window);
   gladLoadGL();
-  // glfwSwapInterval(1);
+  if (self.client.vsync) glfwSwapInterval(1);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
   return window;

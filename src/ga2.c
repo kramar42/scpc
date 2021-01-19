@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "pga2d.h"
+#include "ga2.h"
 
 void ga2_print(const GA2 a)
 {
@@ -93,6 +93,14 @@ float ga2_inorm(const GA2 x)
   GA2 a = {0};
   return ga2_norm(
     ga2_dual(a, x));
+}
+
+float ga2_distance (const GA2 a, const GA2 b)
+{
+  GA2 d = {0};
+  return ga2_norm(
+    ga2_regressive(d,
+      a, b));
 }
 
 // Normalize

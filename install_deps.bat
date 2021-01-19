@@ -35,3 +35,6 @@ copy %tmp%\glad\include\KHR include\KHR
 rem copy source
 if not exist deps mkdir deps
 copy %tmp%\glad\src deps
+
+rem download other dependencies
+curl https://raw.githubusercontent.com/nothings/stb/master/stb_ds.h -o include\std_ds.h
