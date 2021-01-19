@@ -25,7 +25,4 @@ typedef struct {
 
 Mind self;
 
-void success();
-void error(const char* message);
-
-#endif
+#endif // _main_h_

@@ -8,35 +8,103 @@
 
 #include "pga2d.h"
 
-// Norm
-float pga2d_norm(const PGA2D a)
+void ga2_print(const GA2 a)
 {
-  PGA2D conj = {0}, mul = {0};
+  size_t n = 0;
+  for (size_t i = 0, j = 0; i < 8; i++)
+    if (a[i] != 0.0f)
+    {
+      n++;
+      printf("%s%0.7g%s",
+        // sign between terms
+        (j > 0) ? " + " : "",
+        // coeff
+        a[i],
+        (i == 0) ? "" : ga2_basis[i]);
+      j++;
+    };
+    if (n==0) printf("0");
+    printf("\n");
+}
+
+// Constructors
+GA2p ga2_point(GA2 p, const float x, const float y)
+{
+  GA2 a = {0}, b = {0};
+  return ga2_add3(p,
+    ga2_muls(a, ga2_e02, -x),
+    ga2_muls(b, ga2_e01, y),
+    ga2_e12);
+}
+
+GA2p ga2_line(GA2 l, const float x, const float y, const float z)
+{
+  GA2 a = {0}, b = {0}, c = {0};
+  return ga2_add3(l,
+    ga2_muls(a, ga2_e1, x),
+    ga2_muls(b, ga2_e2, y),
+    ga2_muls(c, ga2_e0, z));
+}
+
+GA2p ga2_rotor(GA2 r, const GA2 point, const float angle)
+{
+  GA2 a = {0};
+  return ga2_adds(r,
+    ga2_muls(a,
+      ga2_normalized(a, point),
+      sinf(angle)),
+    cosf(angle));
+}
+
+GA2p ga2_translator(GA2 t, const GA2 point, const float dist)
+{
+  GA2 a = {0};
+  return ga2_adds(t,
+    ga2_muls(a,
+      point,
+      dist / 2.0f),
+    1.0f);
+}
+
+GA2p ga2_transform(GA2 r, const GA2 trans, const GA2 elem)
+{
+  GA2 a = {0}, b = {0};
+  return ga2_mul(r,
+    ga2_mul(a,
+      trans,
+      elem),
+    ga2_reverse(b, trans));
+}
+
+// Norm
+float ga2_norm(const GA2 x)
+{
+  GA2 a = {0}, b = {0};
   return sqrtf(fabsf(
-    pga2d_mul(
-      mul,
-      pga2d_conjugate(conj, a),
-      a)
+    ga2_mul(a,
+      ga2_conjugate(b, x),
+      x)
     [0]));
 }
 
 // Inverse norm
-float pga2d_inorm(const PGA2D a)
+float ga2_inorm(const GA2 x)
 {
-  PGA2D dual = {0};
-  pga2d_dual(dual, a);
-  return pga2d_norm(dual);
+  GA2 a = {0};
+  return ga2_norm(
+    ga2_dual(a, x));
 }
 
 // Normalize
-PGA2Dp pga2d_normalized(PGA2D r, const PGA2D a)
+GA2p ga2_normalized(GA2 r, const GA2 x)
 {
-  float n = 1 / pga2d_norm(a);
-  return pga2d_muls(r, a, n);
+  float n = 1 / ga2_norm(x);
+  return ga2_muls(r,
+    x, n);
 }
 
 // Reverse the order of the basis blades
-PGA2Dp pga2d_reverse(PGA2D r, const PGA2D a)
+GA2p ga2_reverse(GA2 r, const GA2 a)
 {
   r[0] =  a[0];
   r[1] =  a[1];
@@ -50,7 +118,7 @@ PGA2Dp pga2d_reverse(PGA2D r, const PGA2D a)
 };
 
 // Poincare duality operator
-PGA2Dp pga2d_dual(PGA2D r, const PGA2D a)
+GA2p ga2_dual(GA2 r, const GA2 a)
 {
   r[0] = a[7];
   r[1] = a[6];
@@ -64,7 +132,7 @@ PGA2Dp pga2d_dual(PGA2D r, const PGA2D a)
 };
 
 // Clifford conjugation
-PGA2Dp pga2d_conjugate(PGA2D r, const PGA2D a)
+GA2p ga2_conjugate(GA2 r, const GA2 a)
 {
   r[0]=  a[0];
   r[1]= -a[1];
@@ -78,7 +146,7 @@ PGA2Dp pga2d_conjugate(PGA2D r, const PGA2D a)
 };
 
 // Main involution
-PGA2Dp pga2d_involute(PGA2D r, const PGA2D a)
+GA2p ga2_involute(GA2 r, const GA2 a)
 {
   r[0] =  a[0];
   r[1] = -a[1];
@@ -92,7 +160,7 @@ PGA2Dp pga2d_involute(PGA2D r, const PGA2D a)
 };
 
 // Multivector addition
-PGA2Dp pga2d_add(PGA2D r, const PGA2D a, const PGA2D b)
+GA2p ga2_add(GA2 r, const GA2 a, const GA2 b)
 {
   r[0] = a[0] + b[0];
   r[1] = a[1] + b[1];
@@ -105,7 +173,7 @@ PGA2Dp pga2d_add(PGA2D r, const PGA2D a, const PGA2D b)
   return r;
 };
 
-PGA2Dp pga2d_add3(PGA2D r, const PGA2D a, const PGA2D b, const PGA2D c)
+GA2p ga2_add3(GA2 r, const GA2 a, const GA2 b, const GA2 c)
 {
   r[0] = a[0] + b[0] + c[0];
   r[1] = a[1] + b[1] + c[1];
@@ -119,7 +187,7 @@ PGA2Dp pga2d_add3(PGA2D r, const PGA2D a, const PGA2D b, const PGA2D c)
 };
 
 // Multivector/scalar addition
-PGA2Dp pga2d_adds(PGA2D r, const PGA2D a, const float b)
+GA2p ga2_adds(GA2 r, const GA2 a, const float b)
 {
   r[0] = a[0] + b;
   r[1] = a[1];
@@ -133,7 +201,7 @@ PGA2Dp pga2d_adds(PGA2D r, const PGA2D a, const float b)
 };
 
 // Multivector subtraction
-PGA2Dp pga2d_sub(PGA2D r, const PGA2D a, const PGA2D b)
+GA2p ga2_sub(GA2 r, const GA2 a, const GA2 b)
 {
   r[0] = a[0] - b[0];
   r[1] = a[1] - b[1];
@@ -147,7 +215,7 @@ PGA2Dp pga2d_sub(PGA2D r, const PGA2D a, const PGA2D b)
 };
 
 // Multivector/scalar subtraction
-PGA2Dp pga2d_subs(PGA2D r, const PGA2D a, const float b)
+GA2p ga2_subs(GA2 r, const GA2 a, const float b)
 {
   r[0] = a[0] - b;
   r[1] = a[1];
@@ -161,7 +229,7 @@ PGA2Dp pga2d_subs(PGA2D r, const PGA2D a, const float b)
 };
 
 // The geometric product
-PGA2Dp pga2d_mul(PGA2D r, const PGA2D a, const PGA2D b)
+GA2p ga2_mul(GA2 r, const GA2 a, const GA2 b)
 {
   r[0] = b[0]*a[0] + b[2]*a[2] + b[3]*a[3] - b[6]*a[6];
   r[1] = b[1]*a[0] + b[0]*a[1] - b[4]*a[2] - b[5]*a[3] + b[2]*a[4] + b[3]*a[5] - b[7]*a[6] - b[6]*a[7];
@@ -175,7 +243,7 @@ PGA2Dp pga2d_mul(PGA2D r, const PGA2D a, const PGA2D b)
 };
 
 // Multivector/scalar multiplication
-PGA2Dp pga2d_muls(PGA2D r, const PGA2D a, const float b)
+GA2p ga2_muls(GA2 r, const GA2 a, const float b)
 {
   r[0] = a[0]*b;
   r[1] = a[1]*b;
@@ -189,7 +257,7 @@ PGA2Dp pga2d_muls(PGA2D r, const PGA2D a, const float b)
 };
 
 // The outer product (MEET)
-PGA2Dp pga2d_wedge(PGA2D r, const PGA2D a, const PGA2D b)
+GA2p ga2_wedge(GA2 r, const GA2 a, const GA2 b)
 {
   r [0] = b[0]*a[0];
   r [1] = b[1]*a[0] + b[0]*a[1];
@@ -203,7 +271,7 @@ PGA2Dp pga2d_wedge(PGA2D r, const PGA2D a, const PGA2D b)
 };
 
 // The regressive product (JOIN)
-PGA2Dp pga2d_regressive(PGA2D r, const PGA2D a, const PGA2D b)
+GA2p ga2_regressive(GA2 r, const GA2 a, const GA2 b)
 {
   r[7] = a[7]*b[7];
   r[6] = a[6]*b[7] + a[7]*b[6];
@@ -217,7 +285,7 @@ PGA2Dp pga2d_regressive(PGA2D r, const PGA2D a, const PGA2D b)
 };
 
 // The inner product
-PGA2Dp pga2d_inner(PGA2D r, const PGA2D a, const PGA2D b)
+GA2p ga2_inner(GA2 r, const GA2 a, const GA2 b)
 {
   r[0] = b[0]*a[0] + b[2]*a[2] + b[3]*a[3] - b[6]*a[6];
   r[1] = b[1]*a[0] + b[0]*a[1] - b[4]*a[2] - b[5]*a[3] + b[2]*a[4] + b[3]*a[5] - b[7]*a[6] - b[6]*a[7];

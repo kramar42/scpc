@@ -2,5 +2,4 @@ build
 deps
 include
 lib
-main.exe
-main
+main.exe.lnk

@@ -1,7 +1,41 @@
+#include <stdlib.h>
 #include <stdio.h>
 
+#ifdef _WIN32
+  #include <windows.h> // for getcwd
+  #include <conio.h>   // for getch
+#else
+  #include <unistd.h>  // for getcwd
+#endif
+
+#include <GLFW/glfw3.h>
+
 #include "util.h"
-#include "main.h"
+
+void success()
+{
+  glfwTerminate();
+  exit(EXIT_SUCCESS);
+}
+
+void error(const char* message)
+{
+  printf("error: %s\n", message);
+  glfwTerminate();
+  char cwd[256];
+#ifdef _WIN32
+  GetCurrentDirectory(sizeof(cwd), cwd);
+#else
+  getcwd(cwd, sizeof(cwd));
+#endif
+  printf("cwd: %s\nPress any key...", cwd);
+#ifdef _WIN32
+  _getch();
+#else
+  getchar();
+#endif
+  exit(EXIT_FAILURE);
+}
 
 char* slurp_file(const char* filename, size_t* filesize)
 {
