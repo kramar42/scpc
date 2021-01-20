@@ -30,11 +30,12 @@ static const GA3 ga3_e0123     = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 void         ga3_print           (const GA3 a);
 
 // constructors
-GA3p         ga3_point           (GA3 p, float x, float y, float z);
-GA3p         ga3_plane           (GA3 p, float a, float b, float c, float d);
-GA3p         ga3_rotor           (GA3 r, const GA3 line, const float angle);
-GA3p         ga3_translator      (GA3 t, GA3 line, float dist);
-
+GA3p         ga3_point           (GA3 p, const float x,   const float y,      const float z);
+GA3p         ga3_plane           (GA3 p, const float x,   const float y,      const float z, const float w);
+GA3p         ga3_rotor           (GA3 r, const GA3 line,  const float angle);
+GA3p         ga3_translator      (GA3 t, const GA3 line,  const float dist);
+GA3p         ga3_transform       (GA3 r, const GA3 trans, const GA3   elem);
+GA3p         ga3_circle          (GA3 r, const GA3 line,  const float radius, const float t);
 
 // norms
 float        ga3_norm            (const GA3 x);

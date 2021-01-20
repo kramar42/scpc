@@ -14,12 +14,38 @@
 #include "gl.h"
 #include "ps.h"
 #include "ga2.h"
+#include "ga3.h"
 
 #define TRIANGLE_SIZE 0.005
 
 double sum(double acc, double val)
 {
   return acc + val;
+}
+
+// a torus is now the product of two circles.
+GA3p ga_torus(GA3 r, float s, float t, float r1, GA3 l1, float r2, GA3 l2)
+{
+  GA3 a = {0}, b = {0};
+  return ga3_mul(r,
+    ga3_circle(a,
+      l2, r2, s),
+    ga3_circle(b,
+      l1, r1, t));
+}
+
+// and to sample its points we simply sandwich the origin ..
+GA3p ga_point_on_torus(GA3 r, float s, float t)
+{
+  GA3 to = {0}, l1 = {0}, l2 = {0};
+  ga_torus(to, s, t, 0.25f,
+    ga3_mul(l1,
+      ga3_e1,
+      ga3_e2),
+    0.6f,
+    ga3_mul(l2,
+      ga3_e1, ga3_e3));
+  return ga3_transform(r, to, ga3_e123);
 }
 
 float* draw_triangle(float* vertices, GA2 center, GA2 dir)
@@ -60,9 +86,9 @@ int main()
   self = (Mind) {
     .client = {
       .aspect     = 16.0f / 9,
-      .width      = 1920 * 1,
-      .height     = 1080 * 1,
-      .fullscreen = false,
+      .width      = 1920 * 2,
+      .height     = 1080 * 2,
+      .fullscreen = true,
       .vsync      = false,
     },
     .cursor = {

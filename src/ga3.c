@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include "ga3.h"
@@ -27,7 +28,7 @@ void print(const GA3 a)
 
 // PGA points are trivectors.
 // A point is just a homogeneous point, euclidean coordinates plus the origin
-inline GA3p ga3_point(GA3 p, float x, float y, float z)
+GA3p ga3_point(GA3 p, const float x, const float y, const float z)
 {
   GA3 a = {0}, b = {0}, c = {0};
   return ga3_add4(p,
@@ -42,7 +43,7 @@ inline GA3p ga3_point(GA3 p, float x, float y, float z)
 
 // PGA is plane based. Vectors are planes. (think linear functionals)
 // A plane is defined using its homogenous equation ax + by + cz + d = 0
-inline GA3p ga3_plane(GA3 p, float x, float y, float z, float w)
+GA3p ga3_plane(GA3 p, const float x, const float y, const float z, const float w)
 {
   GA3 a = {0}, b = {0}, c = {0}, d = {0};
   return ga3_add4(p,
@@ -57,7 +58,7 @@ inline GA3p ga3_plane(GA3 p, float x, float y, float z, float w)
 }
 
 // A rotor (Euclidean line) and translator (Ideal line)
-inline GA3p ga3_rotor(GA3 r, const GA3 line, const float angle)
+GA3p ga3_rotor(GA3 r, const GA3 line, const float angle)
 {
   GA3 a = {0}, b = {0};
   return ga3_sadd(r,
@@ -68,7 +69,7 @@ inline GA3p ga3_rotor(GA3 r, const GA3 line, const float angle)
         line)));
 }
 
-inline GA3p ga3_translator(GA3 t, GA3 line, float dist)
+GA3p ga3_translator(GA3 t, const GA3 line, const float dist)
 {
   GA3 a = {0};
   return ga3_sadd(t,
@@ -78,7 +79,7 @@ inline GA3p ga3_translator(GA3 t, GA3 line, float dist)
       line));
 }
 
-inline GA3p ga3_transform(GA3 r, const GA3 trans, const GA3 elem)
+GA3p ga3_transform(GA3 r, const GA3 trans, const GA3 elem)
 {
   GA3 a = {0}, b = {0};
   return ga3_mul(r,
@@ -89,8 +90,23 @@ inline GA3p ga3_transform(GA3 r, const GA3 trans, const GA3 elem)
       trans));
 }
 
+// circle(t) with t going from 0 to 1.
+GA3p ga3_circle(GA3 r, const GA3 line, const float radius, const float t)
+{
+  GA3 a = {0}, b = {0}, c = {0};
+  return ga3_mul(r,
+    ga3_rotor(a,
+      line,
+      (float) (t * 2.0f * M_PI)),
+    ga3_translator(b,
+      ga3_mul(c,
+        ga3_e1,
+        ga3_e0),
+      radius));
+}
+
 // Norm
-inline float ga3_norm(const GA3 x)
+float ga3_norm(const GA3 x)
 {
   GA3 a = {0}, b = {0};
   return sqrtf(fabsf(
@@ -102,7 +118,7 @@ inline float ga3_norm(const GA3 x)
 }
 
 // Inverse norm
-inline float ga3_inorm(const GA3 x)
+float ga3_inorm(const GA3 x)
 {
   GA3 a = {0};
   return ga3_norm(
@@ -111,7 +127,7 @@ inline float ga3_inorm(const GA3 x)
 }
 
 // ???
-inline float ga3_distance (const GA3 a, const GA3 b)
+float ga3_distance (const GA3 a, const GA3 b)
 {
   GA3 d = {0};
   return ga3_norm(
@@ -120,7 +136,7 @@ inline float ga3_distance (const GA3 a, const GA3 b)
 }
 
 // Normalize
-inline GA3p ga3_normalized(GA3 r, const GA3 x)
+GA3p ga3_normalized(GA3 r, const GA3 x)
 {
   float n = 1 / ga3_norm(x);
   return ga3_muls(r,
@@ -128,7 +144,7 @@ inline GA3p ga3_normalized(GA3 r, const GA3 x)
 }
 
 // Reverse the order of the basis blades (~)
-inline GA3p ga3_reverse(GA3 r, const GA3 a)
+GA3p ga3_reverse(GA3 r, const GA3 a)
 {
   r[ 0] =  a[ 0];
   r[ 1] =  a[ 1];
@@ -150,7 +166,7 @@ inline GA3p ga3_reverse(GA3 r, const GA3 a)
 };
 
 // Poincare duality operator (!)
-inline GA3p ga3_dual(GA3 r, const GA3 a)
+GA3p ga3_dual(GA3 r, const GA3 a)
 {
   r[ 0] = a[15];
   r[ 1] = a[14];
@@ -172,7 +188,7 @@ inline GA3p ga3_dual(GA3 r, const GA3 a)
 };
 
 // Clifford Conjugation
-inline GA3p ga3_conjugate(GA3 r, const GA3 a)
+GA3p ga3_conjugate(GA3 r, const GA3 a)
 {
   r[ 0] =  a[ 0];
   r[ 1] = -a[ 1];
@@ -194,7 +210,7 @@ inline GA3p ga3_conjugate(GA3 r, const GA3 a)
 };
 
 // Main involution
-inline GA3p ga3_involute(GA3 r, const GA3 a)
+GA3p ga3_involute(GA3 r, const GA3 a)
 {
   r[ 0] =  a[ 0];
   r[ 1] = -a[ 1];
@@ -216,7 +232,7 @@ inline GA3p ga3_involute(GA3 r, const GA3 a)
 };
 
 // The geometric product (*)
-inline GA3p ga3_mul(GA3 r, const GA3 a, const GA3 b)
+GA3p ga3_mul(GA3 r, const GA3 a, const GA3 b)
 {
   r[ 0] = b[ 0]*a[0] + b[ 2]*a[2] + b[ 3]*a[3] + b[ 4]*a[4] - b[ 8]*a[8] - b[ 9]*a[9] - b[10]*a[10] - b[14]*a[14];
   r[ 1] = b[ 1]*a[0] + b[ 0]*a[1] - b[ 5]*a[2] - b[ 6]*a[3] - b[ 7]*a[4] + b[ 2]*a[5] + b[ 3]*a[ 6] + b[ 4]*a[ 7] + b[11]*a[8] + b[12]*a[9] + b[13]*a[10] + b[ 8]*a[11] + b[ 9]*a[12] + b[10]*a[13] + b[15]*a[14] - b[14]*a[15];
@@ -238,7 +254,7 @@ inline GA3p ga3_mul(GA3 r, const GA3 a, const GA3 b)
 };
 
 // The outer product (^)
-inline GA3p ga3_meet(GA3 r, const GA3 a, const GA3 b)
+GA3p ga3_meet(GA3 r, const GA3 a, const GA3 b)
 {
   r[ 0] = b[ 0]*a[0];
   r[ 1] = b[ 1]*a[0] + b[ 0]*a[1];
@@ -260,7 +276,7 @@ inline GA3p ga3_meet(GA3 r, const GA3 a, const GA3 b)
 };
 
 // The regressive product (&)
-inline GA3p ga3_join(GA3 r, const GA3 a, const GA3 b)
+GA3p ga3_join(GA3 r, const GA3 a, const GA3 b)
 {
   r[15] = a[15]*b[15];
   r[14] = a[14]*b[15] - a[15]*b[14];
@@ -282,7 +298,7 @@ inline GA3p ga3_join(GA3 r, const GA3 a, const GA3 b)
 };
 
 // The inner product (|)
-inline GA3p ga3_dot(GA3 r, const GA3 a, const GA3 b)
+GA3p ga3_dot(GA3 r, const GA3 a, const GA3 b)
 {
   r[ 0] = b[ 0]*a[0] + b[ 2]*a[ 2] + b[ 3]*a[ 3] + b[ 4]*a[ 4] - b[ 8]*a[ 8] - b[9 ]*a[ 9] - b[10]*a[10] - b[14]*a[14];
   r[ 1] = b[ 1]*a[0] + b[ 0]*a[ 1] - b[ 5]*a[ 2] - b[ 6]*a[ 3] - b[ 7]*a[ 4] + b[2 ]*a[ 5] + b[ 3]*a[ 6] + b[ 4]*a[ 7] + b[11]*a[8] + b[12]*a[9] + b[13]*a[10] + b[8]*a[11] + b[9]*a[12] + b[10]*a[13] + b[15]*a[14] - b[14]*a[15];
@@ -304,7 +320,7 @@ inline GA3p ga3_dot(GA3 r, const GA3 a, const GA3 b)
 };
 
 // Multivector addition (+)
-inline GA3p ga3_add(GA3 r, const GA3 a, const GA3 b)
+GA3p ga3_add(GA3 r, const GA3 a, const GA3 b)
 {
   r[ 0] = a[ 0] + b[ 0];
   r[ 1] = a[ 1] + b[ 1];
@@ -325,7 +341,7 @@ inline GA3p ga3_add(GA3 r, const GA3 a, const GA3 b)
   return r;
 };
 
-inline GA3p ga3_add4(GA3 r, const GA3 a, const GA3 b, const GA3 c, const GA3 d)
+GA3p ga3_add4(GA3 r, const GA3 a, const GA3 b, const GA3 c, const GA3 d)
 {
   r[ 0] = a[ 0] + b[ 0] + c[ 0] + d[ 0];
   r[ 1] = a[ 1] + b[ 1] + c[ 1] + d[ 1];
@@ -347,7 +363,7 @@ inline GA3p ga3_add4(GA3 r, const GA3 a, const GA3 b, const GA3 c, const GA3 d)
 };
 
 // Multivector subtraction (-)
-inline GA3p ga3_sub(GA3 r, const GA3 a, const GA3 b)
+GA3p ga3_sub(GA3 r, const GA3 a, const GA3 b)
 {
   r[ 0] = a[ 0] - b[ 0];
   r[ 1] = a[ 1] - b[ 1];
@@ -369,7 +385,7 @@ inline GA3p ga3_sub(GA3 r, const GA3 a, const GA3 b)
 };
 
 // Multivector/scalar multiplication (*)
-inline GA3p ga3_muls(GA3 r, const GA3 a, const float b)
+GA3p ga3_muls(GA3 r, const GA3 a, const float b)
 {
   r[ 0] = a[ 0]*b;
   r[ 1] = a[ 1]*b;
@@ -391,7 +407,7 @@ inline GA3p ga3_muls(GA3 r, const GA3 a, const float b)
 };
 
 // Scalar/multivector multiplication (*)
-inline GA3p ga3_smul(GA3 r, const float a, const GA3 b)
+GA3p ga3_smul(GA3 r, const float a, const GA3 b)
 {
   r[ 0] = a*b[ 0];
   r[ 1] = a*b[ 1];
@@ -413,7 +429,7 @@ inline GA3p ga3_smul(GA3 r, const float a, const GA3 b)
 };
 
 // Multivector/scalar addition (+)
-inline GA3p ga3_adds(GA3 r, const GA3 a, const float b)
+GA3p ga3_adds(GA3 r, const GA3 a, const float b)
 {
   r[ 0] = a[ 0] + b;
   r[ 1] = a[ 1];
@@ -435,7 +451,7 @@ inline GA3p ga3_adds(GA3 r, const GA3 a, const float b)
 };
 
 // Scalar/multivector addition (+)
-inline GA3p ga3_sadd(GA3 r, const float a, const GA3 b)
+GA3p ga3_sadd(GA3 r, const float a, const GA3 b)
 {
   r[ 0] = a + b[ 0];
   r[ 1] =     b[ 1];
@@ -457,7 +473,7 @@ inline GA3p ga3_sadd(GA3 r, const float a, const GA3 b)
 };
 
 // Multivector/scalar subtraction (-)
-inline GA3p ga3_subs(GA3 r, const GA3 a, const float b)
+GA3p ga3_subs(GA3 r, const GA3 a, const float b)
 {
   r[ 0] = a[ 0] - b;
   r[ 1] = a[ 1];
@@ -479,7 +495,7 @@ inline GA3p ga3_subs(GA3 r, const GA3 a, const float b)
 };
 
 // Scalar/multivector subtraction (-)
-inline GA3p ga3_ssub(GA3 r, const float a, const GA3 b)
+GA3p ga3_ssub(GA3 r, const float a, const GA3 b)
 {
   r[ 0] = a - b[ 0];
   r[ 1] =   - b[ 1];
@@ -499,59 +515,3 @@ inline GA3p ga3_ssub(GA3 r, const float a, const GA3 b)
   r[15] =   - b[15];
   return r;
 };
-
-
-// for our toy problem (generate points on the surface of a torus)
-// we start with a function that generates motors.
-// circle(t) with t going from 0 to 1.
-// static GA3 circle(float t, float radius, GA3 line) {
-  // return rotor(t*2.0f*PI,line) * translator(radius,ga3_e1*ga3_e0);
-// }
-
-// a torus is now the product of two circles.
-// static GA3 torus(float s, float t, float r1, GA3 l1, float r2, GA3 l2) {
-  // return circle(s,r2,l2)*circle(t,r1,l1);
-// }
-
-// and to sample its points we simply sandwich the origin ..
-// static GA3 point_on_torus(float s, float t) {
-  // GA3 to = torus(s,t,0.25f,ga3_e1*ga3_e2,0.6f,ga3_e1*ga3_e3);
-  // return to * ga3_e123 * ~to;
-// }
-
-// Elements of the even subalgebra (scalar + bivector + pss) of unit length are motors
-// GA3 rot = rotor( PI/2.0f, ga3_e1 * ga3_e2 );
-
-// The outer product ^ is the MEET. Here we intersect the yz (x=0) and xz (y=0) planes.
-// GA3 ax_z = ga3_e1 ^ ga3_e2;
-
-// line and plane meet in point. We intersect the line along the z-axis (x=0,y=0) with the xy (z=0) plane.
-// GA3 orig = ax_z ^ ga3_e3;
-
-// We can also easily create points and join them into a line using the regressive (vee, &) product.
-// GA3 px = point(1.0,0.0,0.0);
-// GA3 line = orig & px;
-
-// Lets also create the plane with equation 2x + z - 3 = 0
-// GA3 p = plane(2,0,1,-3);
-
-// rotations work on all elements
-// GA3 rotated_plane = rot * p * ~rot;
-// GA3 rotated_line  = rot * line * ~rot;
-// GA3 rotated_point = rot * px * ~rot;
-
-// See the 3D PGA Cheat sheet for a huge collection of useful formulas
-// GA3 point_on_plane = (p | px) * p;
-
-// Some output.
-// printf("a point       : "); px.log();
-// printf("a line        : "); line.log();
-// printf("a plane       : "); p.log();
-// printf("a rotor       : "); rot.log();
-// printf("rotated line  : "); rotated_line.log();
-// printf("rotated point : "); rotated_point.log();
-// printf("rotated plane : "); rotated_plane.log();
-// printf("point on plane: "); point_on_plane.normalized().log();
-// printf("point on torus: "); point_on_torus(0.0f,0.0f).log();
-// (ga3_e0-1.0f).log();
-// (1.0f-ga3_e0).log();
