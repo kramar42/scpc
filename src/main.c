@@ -10,7 +10,7 @@
 #include "stb_ds.h"
 
 #include "main.h"
-#include "util.h"
+#include "plat.h"
 #include "gl.h"
 #include "ps.h"
 #include "ga2.h"
@@ -86,9 +86,9 @@ int main()
   self = (Mind) {
     .client = {
       .aspect     = 16.0f / 9,
-      .width      = 1920 * 2,
-      .height     = 1080 * 2,
-      .fullscreen = true,
+      .width      = 1920 * 1,
+      .height     = 1080 * 1,
+      .fullscreen = false,
       .vsync      = false,
     },
     .cursor = {

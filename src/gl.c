@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include "gl.h"
-#include "util.h"
+#include "plat.h"
 
 static void error_callback(int code, const char* description)
 {
@@ -150,6 +150,8 @@ GLFWwindow* gl_init()
   glfwMakeContextCurrent(window);
   gladLoadGL();
   if (self.client.vsync) glfwSwapInterval(1);
+  else                   glfwSwapInterval(0);
+
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
   return window;

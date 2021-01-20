@@ -10,7 +10,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "util.h"
+#include "plat.h"
 
 void success()
 {
