@@ -1,8 +1,3 @@
-// 2D Projective Geometric Algebra
-// Made from C++ code written by generator written by enki
-
-#include <stdlib.h>
-#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -12,6 +7,7 @@ void ga2_print(const GA2 a)
 {
   size_t n = 0;
   for (size_t i = 0, j = 0; i < 8; i++)
+  {
     if (a[i] != 0.0f)
     {
       n++;
@@ -23,8 +19,9 @@ void ga2_print(const GA2 a)
         (i == 0) ? "" : ga2_basis[i]);
       j++;
     };
-    if (n==0) printf("0");
-    printf("\n");
+  }
+  if (n == 0) printf("0");
+  printf("\n");
 }
 
 // Constructors
@@ -32,8 +29,10 @@ GA2p ga2_point(GA2 p, const float x, const float y)
 {
   GA2 a = {0}, b = {0};
   return ga2_add3(p,
-    ga2_muls(a, ga2_e02, -x),
-    ga2_muls(b, ga2_e01, y),
+    ga2_smul(a,
+      -x, ga2_e02),
+    ga2_smul(b,
+       y, ga2_e01),
     ga2_e12);
 }
 
@@ -41,29 +40,33 @@ GA2p ga2_line(GA2 l, const float x, const float y, const float z)
 {
   GA2 a = {0}, b = {0}, c = {0};
   return ga2_add3(l,
-    ga2_muls(a, ga2_e1, x),
-    ga2_muls(b, ga2_e2, y),
-    ga2_muls(c, ga2_e0, z));
+    ga2_smul(a,
+      x, ga2_e1),
+    ga2_smul(b,
+      y, ga2_e2),
+    ga2_smul(c,
+      z, ga2_e0));
 }
 
 GA2p ga2_rotor(GA2 r, const GA2 point, const float angle)
 {
   GA2 a = {0};
-  return ga2_adds(r,
-    ga2_muls(a,
-      ga2_normalized(a, point),
-      sinf(angle)),
-    cosf(angle));
+  return ga2_sadd(r,
+    cosf(angle),
+    ga2_smul(a,
+      sinf(angle),
+      ga2_normalized(a,
+        point)));
 }
 
 GA2p ga2_translator(GA2 t, const GA2 point, const float dist)
 {
   GA2 a = {0};
-  return ga2_adds(t,
-    ga2_muls(a,
-      point,
-      dist / 2.0f),
-    1.0f);
+  return ga2_sadd(t,
+    1.0f,
+    ga2_smul(a,
+      dist / 2.0f,
+      point));
 }
 
 GA2p ga2_transform(GA2 r, const GA2 trans, const GA2 elem)
@@ -73,7 +76,8 @@ GA2p ga2_transform(GA2 r, const GA2 trans, const GA2 elem)
     ga2_mul(a,
       trans,
       elem),
-    ga2_reverse(b, trans));
+    ga2_reverse(b,
+      trans));
 }
 
 // Norm
@@ -82,7 +86,8 @@ float ga2_norm(const GA2 x)
   GA2 a = {0}, b = {0};
   return sqrtf(fabsf(
     ga2_mul(a,
-      ga2_conjugate(b, x),
+      ga2_conjugate(b,
+        x),
       x)
     [0]));
 }
@@ -92,14 +97,15 @@ float ga2_inorm(const GA2 x)
 {
   GA2 a = {0};
   return ga2_norm(
-    ga2_dual(a, x));
+    ga2_dual(a,
+      x));
 }
 
 float ga2_distance (const GA2 a, const GA2 b)
 {
   GA2 d = {0};
   return ga2_norm(
-    ga2_regressive(d,
+    ga2_join(d,
       a, b));
 }
 
@@ -194,7 +200,21 @@ GA2p ga2_add3(GA2 r, const GA2 a, const GA2 b, const GA2 c)
   return r;
 };
 
-// Multivector/scalar addition
+// Scalar/multivector addition (+)
+GA2p ga2_sadd(GA2 r, const float a, const GA2 b)
+{
+  r[0] = a + b[0];
+  r[1] =     b[1];
+  r[2] =     b[2];
+  r[3] =     b[3];
+  r[4] =     b[4];
+  r[5] =     b[5];
+  r[6] =     b[6];
+  r[7] =     b[7];
+  return r;
+};
+
+// Multivector/scalar addition (+)
 GA2p ga2_adds(GA2 r, const GA2 a, const float b)
 {
   r[0] = a[0] + b;
@@ -223,16 +243,16 @@ GA2p ga2_sub(GA2 r, const GA2 a, const GA2 b)
 };
 
 // Multivector/scalar subtraction
-GA2p ga2_subs(GA2 r, const GA2 a, const float b)
+GA2p ga2_ssub(GA2 r, const float a, const GA2 b)
 {
-  r[0] = a[0] - b;
-  r[1] = a[1];
-  r[2] = a[2];
-  r[3] = a[3];
-  r[4] = a[4];
-  r[5] = a[5];
-  r[6] = a[6];
-  r[7] = a[7];
+  r[0] = a - b[0];
+  r[1] =   - b[1];
+  r[2] =   - b[2];
+  r[3] =   - b[3];
+  r[4] =   - b[4];
+  r[5] =   - b[5];
+  r[6] =   - b[6];
+  r[7] =   - b[7];
   return r;
 };
 
@@ -250,7 +270,7 @@ GA2p ga2_mul(GA2 r, const GA2 a, const GA2 b)
   return r;
 };
 
-// Multivector/scalar multiplication
+// Multivector/scalar multiplication (*)
 GA2p ga2_muls(GA2 r, const GA2 a, const float b)
 {
   r[0] = a[0]*b;
@@ -264,8 +284,22 @@ GA2p ga2_muls(GA2 r, const GA2 a, const float b)
   return r;
 };
 
-// The outer product (MEET)
-GA2p ga2_wedge(GA2 r, const GA2 a, const GA2 b)
+// Scalar/multivector multiplication (*)
+GA2p ga2_smul(GA2 r, const float a, const GA2 b)
+{
+  r[0] = a*b[0];
+  r[1] = a*b[1];
+  r[2] = a*b[2];
+  r[3] = a*b[3];
+  r[4] = a*b[4];
+  r[5] = a*b[5];
+  r[6] = a*b[6];
+  r[7] = a*b[7];
+  return r;
+};
+
+// The outer product (^)
+GA2p ga2_meet(GA2 r, const GA2 a, const GA2 b)
 {
   r [0] = b[0]*a[0];
   r [1] = b[1]*a[0] + b[0]*a[1];
@@ -279,7 +313,7 @@ GA2p ga2_wedge(GA2 r, const GA2 a, const GA2 b)
 };
 
 // The regressive product (JOIN)
-GA2p ga2_regressive(GA2 r, const GA2 a, const GA2 b)
+GA2p ga2_join(GA2 r, const GA2 a, const GA2 b)
 {
   r[7] = a[7]*b[7];
   r[6] = a[6]*b[7] + a[7]*b[6];
