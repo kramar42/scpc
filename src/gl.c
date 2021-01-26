@@ -125,10 +125,10 @@ void gl_update(GL* gl)
       printf("fps: %f\n", self.client.avg_fps);
     if (gl->scenes)
     {
-      size_t vertices = 0;
+      size_t indices = 0;
       for (size_t i = 0; i < arrlenu(gl->scenes); i++)
-        vertices += arrlenu(gl->scenes[i]->vertices);
-      printf("drawing %zd triangles, MB: %f\n", vertices / 9, vertices * sizeof(float) / 1024.f / 1024.f);
+        indices += arrlenu(gl->scenes[i]->indices);
+      printf("drawing %zd triangles\n", indices / 3); //, indices * sizeof(float) / 1024.f / 1024.f);
     }
   }
 }

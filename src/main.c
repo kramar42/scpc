@@ -53,20 +53,36 @@ float* draw_triangle(float* vertices, GA2 center, GA2 dir)
   return vertices;
 }
 
-float* draw_square(float* v, GA3 point, float depth, float size)
+void draw_square(Scene* scene, GA3 point, float size)
 {
   float x = point[13], y = point[12], z = point[11], h = size / 2;
   // printf("sanity check: %f %f %f %f %f\n", x, y, z, depth, h);
 
-  arrput(v, x - h); arrput(v, y - h); arrput(v, z);
-  arrput(v, x - h); arrput(v, y + h); arrput(v, z - depth);
-  arrput(v, x + h); arrput(v, y + h); arrput(v, z - depth);
+  float vertices[] = {
+    x - h, y - h, z + h,
+    x - h, y - h, z - h,
+    x + h, y - h, z - h,
+    x + h, y - h, z + h,
+    x + h, y + h, z + h,
+    x + h, y + h, z - h,
+    x - h, y + h, z - h,
+    x - h, y + h, z + h,
+  };
 
-  arrput(v, x - h); arrput(v, y - h); arrput(v, z);
-  arrput(v, x + h); arrput(v, y + h); arrput(v, z - depth);
-  arrput(v, x + h); arrput(v, y - h); arrput(v, z);
+  uint32_t indices[] = {
+    0, 1, 2, 2, 3, 0, // bottom
+    0, 7, 6, 6, 1, 0, // left
+    1, 6, 5, 5, 2, 1, // back
+    4, 5, 2, 2, 3, 4, // right
+    0, 7, 4, 4, 3, 0, // front
+    7, 6, 5, 5, 4, 7, // top
+  };
 
-  return v;
+  for (size_t i = 0; i < 3 * 8; i++)
+    arrput(scene->vertices, vertices[i]);
+
+  for (size_t i = 0; i < 3 * 2 * 6; i++)
+    arrput(scene->indices, indices[i]);
 }
 
 // сделать углы фрустума подвижными. они напрямую привязаны к текущей проекции
@@ -117,33 +133,37 @@ int main()
   GA3 origin3; ga3_point(origin3, 0.0f, 0.0f, 0.0f);
   GA2 origin2; ga2_point(origin2, 0.0f, 0.0f);
 
-  GA3 x_axis, y_axis, z_axis;
-  ga3_sadd(x_axis, 0, ga3_e12);
-  ga3_sadd(y_axis, 0, ga3_e23);
-  ga3_sadd(z_axis, 0, ga3_e31);
-
-  float* vertices = NULL;
   while (gl_running(&gl))
   {
-    arrfree(vertices);
+    scene_clear(&debug);
 
     // [-1; +1]
     float cursor_x =  (float)self.cursor.x / self.window.width  * 2 - 1;
     float cursor_y = -(float)self.cursor.y / self.window.height * 2 + 1;
-    float scroll   =  (float)self.cursor.scroll;
+    // float scroll   =  (float)self.cursor.scroll;
 
     // generate shapes
 #if 1
     // transformed square
-    GA3 transformation, trans_x, trans_y, center, point;
-    ga3_translator(trans_x, x_axis, cursor_x);
-    ga3_translator(trans_y, y_axis, cursor_y);
-    ga3_mul(transformation, trans_x, trans_y);
+    GA3 transformation, trans_x, trans_y, trans_z, rot_x, rot_y;
+    // translations
+    ga3_translator(trans_x, ga3_e31, self.camera.x);
+    ga3_translator(trans_y, ga3_e23, self.camera.y);
+    ga3_translator(trans_z, ga3_e12, self.camera.z);
+    // rotations
+    ga3_rotor(rot_x, ga3_e31, -cursor_x);
+    ga3_rotor(rot_y, ga3_e23, cursor_y);
 
-    ga3_point(center, 0.0f, 0.0f, 0.0f);
-    ga3_transform(point, transformation, center);
+    GA3* transformations[] = {
+      &trans_x, &trans_y, &trans_z,
+      &rot_x, &rot_y
+    };
+    ga3_combine(transformation, transformations, sizeof(transformations) / sizeof(GA3*));
 
-    vertices = draw_square(vertices, center, scroll * self.cursor.scale, 0.5f);
+    GA3 center; ga3_point(center, 0.0f, 0.0f, 0.5f);
+
+    // draw
+    draw_square(&debug, center, 0.5f);
 #endif
 
 #if 0
@@ -152,11 +172,10 @@ int main()
     ga2_point(cursor, cursor_x * self.client.aspect, cursor_y);
     ga2_sub  (dir, cursor, origin2);
 
-    vertices = draw_triangle(vertices, origin2, dir);
+    draw_triangle(&debug, origin2, dir);
 #endif
 
     // setup scene
-    scene_send_vertices(&debug, vertices);
     scene_umat4(&debug, "trans", transformation);
     // render
     gl_update(&gl);

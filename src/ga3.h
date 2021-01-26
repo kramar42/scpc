@@ -35,6 +35,7 @@ GA3p         ga3_plane           (GA3 p, const float x,   const float y,      co
 GA3p         ga3_rotor           (GA3 r, const GA3 line,  const float angle);
 GA3p         ga3_translator      (GA3 t, const GA3 line,  const float dist);
 GA3p         ga3_transform       (GA3 r, const GA3 trans, const GA3   elem);
+GA3p         ga3_combine         (GA3 r, const GA3** trs, size_t n);
 GA3p         ga3_circle          (GA3 r, const GA3 line,  const float radius, const float t);
 GA3p         ga3_torus           (GA3 r, const float s,   const float t,      const float r1, const GA3 l1, const float r2, const GA3 l2);
 
@@ -112,7 +113,7 @@ GA3p ga3_point(GA3 p, const float x, const float y, const float z)
   p[11] = z;
   p[12] = y;
   p[13] = x;
-  p[14] = 0;
+  p[14] = 1;
   p[15] = 0;
   return p;
 }
@@ -172,6 +173,16 @@ GA3p ga3_transform(GA3 r, const GA3 trans, const GA3 elem)
       elem),
     ga3_reverse(b,
       trans));
+}
+
+GA3p ga3_combine(GA3 r, const GA3** trs, size_t n)
+{
+  assert(n > 0);
+  GA3 tmp[2] = {{0}, {0}};
+  ga3_sadd(tmp[0], 0, *trs[0]);
+  for (size_t i = 1; i < n; i++)
+    ga3_mul(tmp[i%2], tmp[(i-1)%2], *trs[i]);
+  return ga3_sadd(r, 0, tmp[(n-1)%2]);
 }
 
 // circle(t) with t going from 0 to 1.

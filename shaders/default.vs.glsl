@@ -3,26 +3,6 @@ layout (location = 0) in vec3 position;
 out vec3 PositionColor;
 uniform float trans[16];
 
-float[16] ga3_point(float[16] p, vec3 v)
-{
-  p[ 0] = 0;
-  p[ 1] = 0;
-  p[ 2] = 0;
-  p[ 3] = 0;
-  p[ 4] = 0;
-  p[ 5] = 0;
-  p[ 6] = 0;
-  p[ 7] = 0;
-  p[ 8] = 0;
-  p[ 9] = 0;
-  p[10] = 0;
-  p[11] = v.z;
-  p[12] = v.y;
-  p[13] = v.x;
-  p[14] = 0;
-  p[15] = 0;
-  return p;
-}
 // The geometric product (*)
 float[16] ga3_mul(float r[16], const float a[16], const float b[16])
 {
@@ -96,7 +76,7 @@ float[16] vec3_ga3(float r[16], vec3 a)
   r[11] = a.z;
   r[12] = a.y;
   r[13] = a.x;
-  r[14] = 0;
+  r[14] = 1;
   r[15] = 0;
   return r;
 }
@@ -106,9 +86,10 @@ void main()
   vec3 point = ga3_vec3(
     ga3_transform(t,
       trans,
-      ga3_point(p, position)));
+      vec3_ga3(p, position)));
   gl_Position = vec4(
-    position,
+    point,
+    // position,
     // normalization factor
     1.0f);
   PositionColor = gl_Position.xyz;

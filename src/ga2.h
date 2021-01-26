@@ -35,6 +35,7 @@ GA2p         ga2_line            (GA2 l, const float x,   const float y,      co
 GA2p         ga2_rotor           (GA2 r, const GA2 point, const float angle);
 GA2p         ga2_translator      (GA2 t, const GA2 point, const float dist);
 GA2p         ga2_transform       (GA2 r, const GA2 trans, const GA2   elem);
+GA2p         ga2_combine         (GA2 r, const GA2** trs, size_t n);
 GA2p         ga2_circle          (GA2 r, const GA2 point, const float radius, const float t);
 
 
@@ -64,6 +65,8 @@ GA2p         ga2_adds            (GA2 r, const GA2   a, const float b);
 GA2p         ga2_sadd            (GA2 r, const float a, const GA2   b);
 GA2p         ga2_subs            (GA2 r, const GA2   a, const float b);
 GA2p         ga2_ssub            (GA2 r, const float a, const GA2   b);
+
+
 
 #ifdef _ga2_impl_
 
