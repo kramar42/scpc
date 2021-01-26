@@ -1,73 +1,45 @@
-#include <stdio.h>
-#define _USE_MATH_DEFINES
-#include <math.h>      // for M_PI
-#include <stdbool.h>
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #define STB_DS_IMPLEMENTATION
-#include "stb_ds.h"
+#include <stb_ds.h>
+
+#define _ps_impl_
+#include "ps.h"
+#define _ga2_impl_
+#include "ga2.h"
+#define _ga3_impl_
+#include "ga3.h"
 
 #include "main.h"
 #include "plat.h"
 #include "gl.h"
-#include "ps.h"
-#include "ga2.h"
-#include "ga3.h"
+#include "scene.h"
 
 #define TRIANGLE_SIZE 0.005
 
-double sum(double acc, double val)
-{
-  return acc + val;
-}
-
-// a torus is now the product of two circles.
-GA3p ga_torus(GA3 r, float s, float t, float r1, GA3 l1, float r2, GA3 l2)
-{
-  GA3 a = {0}, b = {0};
-  return ga3_mul(r,
-    ga3_circle(a,
-      l2, r2, s),
-    ga3_circle(b,
-      l1, r1, t));
-}
-
-// and to sample its points we simply sandwich the origin ..
-GA3p ga_point_on_torus(GA3 r, float s, float t)
-{
-  GA3 to = {0}, l1 = {0}, l2 = {0};
-  ga_torus(to, s, t, 0.25f,
-    ga3_mul(l1,
-      ga3_e1,
-      ga3_e2),
-    0.6f,
-    ga3_mul(l2,
-      ga3_e1, ga3_e3));
-  return ga3_transform(r, to, ga3_e123);
-}
-
 float* draw_triangle(float* vertices, GA2 center, GA2 dir)
 {
-  GA2 rotor    = {0}; ga2_rotor(rotor, center, (float) M_PI / 3.f);
-  GA2 half_dir = {0}; ga2_muls(half_dir, dir, 0.5f);
+  GA2 rotor, half_dir;
+  ga2_rotor(rotor, center, (float) M_PI / 3.f);
+  ga2_smul(half_dir, 0.5f, dir);
 
-  GA2 p1 = {0}, p2 = {0}, p3 = {0};
+  GA2 p1, p2, p3;
 
   if (ga2_distance(center, dir) < TRIANGLE_SIZE)
   {
+    // printf("sanity check: %f %f\n", -center[5], center[4]);
     ga2_add      (p1, center, dir);
     ga2_add      (p1, p1, half_dir);
     ga2_transform(p2, rotor,  p1);
     ga2_transform(p3, rotor,  p2);
 
-    arrput(vertices, -p1[5] / self.client.aspect);
+    arrput(vertices, -p1[5]);
     arrput(vertices,  p1[4]);
-    arrput(vertices, -p2[5] / self.client.aspect);
+    arrput(vertices,  1.0f);
+    arrput(vertices, -p2[5]);
     arrput(vertices,  p2[4]);
-    arrput(vertices, -p3[5] / self.client.aspect);
+    arrput(vertices,  1.0f);
+    arrput(vertices, -p3[5]);
     arrput(vertices,  p3[4]);
+    arrput(vertices,  1.0f);
     return vertices;
   }
 
@@ -81,81 +53,113 @@ float* draw_triangle(float* vertices, GA2 center, GA2 dir)
   return vertices;
 }
 
+float* draw_square(float* v, GA3 point, float depth, float size)
+{
+  float x = point[13], y = point[12], z = point[11], h = size / 2;
+  // printf("sanity check: %f %f %f %f %f\n", x, y, z, depth, h);
+
+  arrput(v, x - h); arrput(v, y - h); arrput(v, z);
+  arrput(v, x - h); arrput(v, y + h); arrput(v, z - depth);
+  arrput(v, x + h); arrput(v, y + h); arrput(v, z - depth);
+
+  arrput(v, x - h); arrput(v, y - h); arrput(v, z);
+  arrput(v, x + h); arrput(v, y + h); arrput(v, z - depth);
+  arrput(v, x + h); arrput(v, y - h); arrput(v, z);
+
+  return v;
+}
+
+// сделать углы фрустума подвижными. они напрямую привязаны к текущей проекции
+// чтобы понимать что происходит - в углу привычная проекция показывает фрустум
+float* draw_frustum(float* v, GA3 line, float* params)
+{
+  (void)v;(void)line;(void)params;
+  return v;
+}
+
+// left mouse click - select
+// left mouse drag - drag the world
+// right mouse click - meta
+// right mouse drag - perspective
+// middle click - toggle perspective lock
 int main()
 {
   self = (Mind) {
-    .client = {
+    .window = {
+      .title      = "SCPC",
       .aspect     = 16.0f / 9,
       .width      = 1920 * 1,
       .height     = 1080 * 1,
       .fullscreen = false,
-      .vsync      = false,
+      .vsync      = true,
+    },
+    .client = {
+      .tick       = 1,
+    },
+    .camera = {
+      .speed      = 0.05f,
     },
     .cursor = {
-      .scroll = 0.005,
-      .scale  = 0.01,
+      .scale      = 0.37f,
     }
   };
 
-  Channel* fps = new_chan(100);
-  GLFWwindow* window = gl_init();
+  GL gl; gl_init(&gl);
 
-  // vertex data
-  uint32_t VBO;
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  Scene debug = (Scene) {
+    .vs_shader = "shaders/default.vs.glsl",
+    .fs_shader = "shaders/position.fs.glsl",
+  };
+  scene_init(&debug);
+  gl_add_scene(&gl, &debug);
 
-  // vertex layout
-  uint32_t VAO;
-  glGenVertexArrays(1, &VAO);
-  glBindVertexArray(VAO);
+  // done with init. define some elements
+  GA3 origin3; ga3_point(origin3, 0.0f, 0.0f, 0.0f);
+  GA2 origin2; ga2_point(origin2, 0.0f, 0.0f);
 
-  // 2 floats per fertex, layout (location=0)
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-
-  // shaders
-  uint32_t shader_program = gl_program("shaders/translate.vs", "shaders/position.fs");
-  glUseProgram(shader_program);
-
-  // wireframe mode
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  GA2 center = {0}; ga2_point(center, 0.0f, 0.0f);
-  GA2 cursor = {0}, dir = {0};
+  GA3 x_axis, y_axis, z_axis;
+  ga3_sadd(x_axis, 0, ga3_e12);
+  ga3_sadd(y_axis, 0, ga3_e23);
+  ga3_sadd(z_axis, 0, ga3_e31);
 
   float* vertices = NULL;
-  // loop
-  for (;;)
+  while (gl_running(&gl))
   {
-    float cursor_x = (float) self.cursor.x / self.client.width  * 2 - 1;
-    float cursor_y = (float)-self.cursor.y / self.client.height * 2 + 1;
-
-    // TODO fix aspect with trasformation matrix?
-    ga2_point(cursor, cursor_x * self.client.aspect, cursor_y);
-    ga2_sub  (dir, cursor, center);
-
     arrfree(vertices);
-    vertices = draw_triangle(vertices, center, dir);
 
-    // draw
-    glClear(GL_COLOR_BUFFER_BIT);
-    glBufferData(GL_ARRAY_BUFFER, arrlen(vertices) * sizeof(float), vertices, GL_STATIC_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, (int)arrlen(vertices) / 6);
+    // [-1; +1]
+    float cursor_x =  (float)self.cursor.x / self.window.width  * 2 - 1;
+    float cursor_y = -(float)self.cursor.y / self.window.height * 2 + 1;
+    float scroll   =  (float)self.cursor.scroll;
 
-    // update
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-    if (glfwWindowShouldClose(window)) break;
+    // generate shapes
+#if 1
+    // transformed square
+    GA3 transformation, trans_x, trans_y, center, point;
+    ga3_translator(trans_x, x_axis, cursor_x);
+    ga3_translator(trans_y, y_axis, cursor_y);
+    ga3_mul(transformation, trans_x, trans_y);
 
-    // fps
-    double time = glfwGetTime();
-    double avg_fps = 1.0 / (time - self.client.last_frame);
-    put_chan(fps, avg_fps);
+    ga3_point(center, 0.0f, 0.0f, 0.0f);
+    ga3_transform(point, transformation, center);
 
-    self.client.last_frame = time;
-    self.client.avg_fps = reduce_chan(fps, sum) / chan_size(fps);
-    printf("fps: %f\n", self.client.avg_fps);
+    vertices = draw_square(vertices, center, scroll * self.cursor.scale, 0.5f);
+#endif
+
+#if 0
+    // sierpinski
+    GA2 cursor, dir;
+    ga2_point(cursor, cursor_x * self.client.aspect, cursor_y);
+    ga2_sub  (dir, cursor, origin2);
+
+    vertices = draw_triangle(vertices, origin2, dir);
+#endif
+
+    // setup scene
+    scene_send_vertices(&debug, vertices);
+    scene_umat4(&debug, "trans", transformation);
+    // render
+    gl_update(&gl);
   }
 
   success();

@@ -1,16 +1,15 @@
+#include "plat.h"
+
 #include <stdlib.h>
 #include <stdio.h>
-
 #ifdef _WIN32
   #include <windows.h> // for getcwd
   #include <conio.h>   // for getch
 #else
   #include <unistd.h>  // for getcwd
 #endif
-
 #include <GLFW/glfw3.h>
 
-#include "plat.h"
 
 void success()
 {
