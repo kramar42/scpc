@@ -53,7 +53,7 @@ float* draw_triangle(float* vertices, GA2 center, GA2 dir)
   return vertices;
 }
 
-void draw_square(Scene* scene, GA3 point, float size)
+void draw_cube(Scene* scene, GA3 point, float size)
 {
   float x = point[13], y = point[12], z = point[11], h = size / 2;
   // printf("sanity check: %f %f %f %f %f\n", x, y, z, depth, h);
@@ -142,28 +142,26 @@ int main()
     float cursor_y = -(float)self.cursor.y / self.window.height * 2 + 1;
     // float scroll   =  (float)self.cursor.scroll;
 
-    // generate shapes
 #if 1
-    // transformed square
+    // draw
+    GA3 center; ga3_point(center, 0.0f, 0.0f, 1.0f);
+    draw_cube(&debug, center, 1.0f);
+
     GA3 transformation, trans_x, trans_y, trans_z, rot_x, rot_y;
     // translations
-    ga3_translator(trans_x, ga3_e31, self.camera.x);
-    ga3_translator(trans_y, ga3_e23, self.camera.y);
-    ga3_translator(trans_z, ga3_e12, self.camera.z);
+    ga3_translator(trans_x, ga3_e01, self.camera.x);
+    ga3_translator(trans_y, ga3_e02, self.camera.y);
+    ga3_translator(trans_z, ga3_e03, self.camera.z);
     // rotations
+    // todo should be through camera.xyz
     ga3_rotor(rot_x, ga3_e31, -cursor_x);
-    ga3_rotor(rot_y, ga3_e23, cursor_y);
+    ga3_rotor(rot_y, ga3_e23,  cursor_y);
 
     GA3* transformations[] = {
       &trans_x, &trans_y, &trans_z,
       &rot_x, &rot_y
     };
-    ga3_combine(transformation, transformations, sizeof(transformations) / sizeof(GA3*));
-
-    GA3 center; ga3_point(center, 0.0f, 0.0f, 0.5f);
-
-    // draw
-    draw_square(&debug, center, 0.5f);
+    ga3_combine(transformation, transformations, sizeof(transformations) / sizeof(transformations[0]));
 #endif
 
 #if 0
@@ -176,7 +174,12 @@ int main()
 #endif
 
     // setup scene
-    scene_umat4(&debug, "trans", transformation);
+    scene_ufloat(&debug, "focal",  500.0f);
+    scene_ufloat(&debug, "width",  self.window.width / 2.0f);
+    scene_ufloat(&debug, "height", self.window.height / 2.0f);
+    scene_ufloat(&debug, "near",   0.1f);
+    scene_ufloat(&debug, "far",    100);
+    scene_umat4 (&debug, "trans",  transformation);
     // render
     gl_update(&gl);
   }

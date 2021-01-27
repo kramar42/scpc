@@ -1,6 +1,7 @@
 #version 330 core
 layout (location = 0) in vec3 position;
 out vec3 PositionColor;
+uniform float focal, width, height, near, far;
 uniform float trans[16];
 
 // The geometric product (*)
@@ -56,10 +57,6 @@ float[16] ga3_transform(float r[16], float trans[16], float elem[16])
     ga3_reverse(b,
       trans));
 };
-vec3 ga3_vec3(float elem[16])
-{
-  return vec3(elem[13], elem[12], elem[11]);
-};
 float[16] vec3_ga3(float r[16], vec3 a)
 {
   r[ 0] = 0;
@@ -80,17 +77,23 @@ float[16] vec3_ga3(float r[16], vec3 a)
   r[15] = 0;
   return r;
 }
+// returns vec4 in a clip space
+vec4 ga3_vec4(float elem[16])
+{
+  vec3 view = vec3(elem[13], elem[12], elem[11]);
+  return vec4(
+    view.x * focal / width,
+    view.y * focal / height,
+    (view.z - near) / (far - near) * (far + near) - near,
+    view.z);
+};
+
 void main()
 {
   float[16]p,t;
-  vec3 point = ga3_vec3(
+  gl_Position = ga3_vec4(
     ga3_transform(t,
       trans,
       vec3_ga3(p, position)));
-  gl_Position = vec4(
-    point,
-    // position,
-    // normalization factor
-    1.0f);
   PositionColor = gl_Position.xyz;
 }

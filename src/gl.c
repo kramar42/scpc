@@ -133,8 +133,6 @@ void gl_update(GL* gl)
   }
 }
 
-// UTILS
-
 uint32_t gl_program(const char* vertex_filename, const char* fragment_filename)
 {
   uint32_t vertex_shader = gl_shader(vertex_filename, GL_VERTEX_SHADER);

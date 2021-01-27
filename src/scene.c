@@ -47,23 +47,23 @@ void scene_clear(Scene* scene)
 
 void scene_render(Scene* scene)
 {
-  glBindVertexArray(scene->vao);
-  glBufferData(GL_ARRAY_BUFFER, arrlenu(scene->vertices) * sizeof(float), scene->vertices, GL_STATIC_DRAW);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, arrlenu(scene->indices) * sizeof(uint32_t), scene->indices, GL_STATIC_DRAW);
   glUseProgram(scene->shader);
-  glDrawElements(GL_TRIANGLES, (int)arrlenu(scene->indices), GL_UNSIGNED_INT, 0);
+  glBindVertexArray(scene->vao);
+  glBufferData(GL_ARRAY_BUFFER,         arrlenu(scene->vertices)*sizeof(scene->vertices[0]), scene->vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, arrlenu(scene->indices)*sizeof(scene->indices[0]),   scene->indices,  GL_STATIC_DRAW);
+  glDrawElements(GL_TRIANGLES,     (int)arrlenu(scene->indices), GL_UNSIGNED_INT, 0);
 }
 
 void scene_ufloat(Scene* scene, const char* uniform, float value)
 {
-  glUseProgram(scene->shader);
   uint32_t uniform_loc = glGetUniformLocation(scene->shader, uniform);
+  glUseProgram(scene->shader);
   glUniform1f(uniform_loc, value);
 }
 
 void scene_umat4(Scene* scene, const char* uniform, float value[16])
 {
-  glUseProgram(scene->shader);
   uint32_t uniform_loc = glGetUniformLocation(scene->shader, uniform);
+  glUseProgram(scene->shader);
   glUniform1fv(uniform_loc, 16, value);
 }
