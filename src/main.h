@@ -5,11 +5,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define DEBUG 1
+
+#include "ga3.h"
+
 typedef struct {
   const char* title;
+  uint32_t    size;
   uint32_t    width;
   uint32_t    height;
   uint32_t    depth;
+  float       front;
   float       aspect;
   bool        fullscreen;
   bool        vsync;
@@ -17,13 +23,15 @@ typedef struct {
 
 typedef struct {
   bool        fps;
+  float       last_fps;
   float       last_frame;
   float       avg_fps;
-  float       last_tick;
   float       tick;
-} Client;
+  float       last_tick;
+} Stats;
 
 typedef struct {
+  GA3p        looking_at;
   float       speed;
   float       x;
   float       y;
@@ -31,15 +39,17 @@ typedef struct {
 } Camera;
 
 typedef struct {
-  uint32_t    x;
-  uint32_t    y;
+  float       last_x;
+  float       x;
+  float       last_y;
+  float       y;
   float       scroll;
   float       scale;
 } Cursor;
 
 typedef struct {
   Window      window;
-  Client      client;
+  Stats       stats;
   Camera      camera;
   Cursor      cursor;
 } Mind;

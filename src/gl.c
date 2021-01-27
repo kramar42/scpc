@@ -55,9 +55,8 @@ void gl_init(GL* gl)
   if (self.window.vsync) glfwSwapInterval(1);
   else                   glfwSwapInterval(0);
 
+  glfwSetInputMode(gl->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-  if (self.client.fps) gl->fps = new_chan(100);
 
   const GLubyte* renderer = glGetString(GL_RENDERER);
   const GLubyte* version  = glGetString(GL_VERSION);
@@ -68,6 +67,8 @@ void gl_init(GL* gl)
 
   gl->scenes = NULL;
   gl->fps    = NULL;
+  if (self.stats.fps) gl->fps = new_chan(100);
+
 }
 
 void gl_add_scene(GL* gl, Scene* scene)
@@ -80,15 +81,24 @@ bool gl_running(GL* gl)
   return !glfwWindowShouldClose(gl->window);
 }
 
+void gl_clear(GL* gl)
+{
+  for (size_t i = 0; i < arrlenu(gl->scenes); i++)
+    scene_clear(gl->scenes[i]);
+}
+
 void update_camera(GL* gl)
 {
   if (glfwGetKey(gl->window, GLFW_KEY_X))
     glfwSetWindowShouldClose(gl->window, GLFW_TRUE);
 
+  // todo multiply with last_fps
+  // forward - up Z axis
   if (glfwGetKey(gl->window, GLFW_KEY_E))
     self.camera.z += self.camera.speed;
   if (glfwGetKey(gl->window, GLFW_KEY_D))
     self.camera.z -= self.camera.speed;
+  // right -> up X axis
   if (glfwGetKey(gl->window, GLFW_KEY_F))
     self.camera.x += self.camera.speed;
   if (glfwGetKey(gl->window, GLFW_KEY_S))
@@ -97,6 +107,9 @@ void update_camera(GL* gl)
 
 void gl_update(GL* gl)
 {
+  glfwPollEvents();
+  update_camera(gl);
+
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
   if (gl->scenes)
@@ -104,32 +117,37 @@ void gl_update(GL* gl)
       scene_render(gl->scenes[i]);
 
   glfwSwapBuffers(gl->window);
-  glfwPollEvents();
-  update_camera(gl);
 
-  // fps
+  // stats: fps
   float time = (float)glfwGetTime();
   if (gl->fps)
   {
-    float avg_fps = 1.0f / (time - self.client.last_frame);
-    put_chan(gl->fps, avg_fps);
-    self.client.last_frame = time;
-    self.client.avg_fps = reduce_chan(gl->fps, sum) / chan_size(gl->fps);
+    float last_fps = 1.0f / (time - self.stats.last_frame);
+    put_chan(gl->fps, last_fps);
+    self.stats.last_fps   = last_fps;
+    self.stats.last_frame = time;
+    self.stats.avg_fps    = reduce_chan(gl->fps, sum) / chan_size(gl->fps);
   }
 
-  float dtick = time - self.client.last_tick;
-  if (dtick > self.client.tick)
+  // output on tick
+  float dtick = time - self.stats.last_tick;
+  if (dtick > self.stats.tick)
   {
-    self.client.last_tick = time;
+    self.stats.last_tick = time;
     if (gl->fps)
-      printf("fps: %f\n", self.client.avg_fps);
+      printf("fps: %f\n", self.stats.avg_fps);
     if (gl->scenes)
     {
       size_t indices = 0;
       for (size_t i = 0; i < arrlenu(gl->scenes); i++)
         indices += arrlenu(gl->scenes[i]->indices);
+      // assume all scenes were drawing triangles
       printf("drawing %zd triangles\n", indices / 3); //, indices * sizeof(float) / 1024.f / 1024.f);
     }
+#ifdef DEBUG
+    printf("camera.x = %f, camera.y = %f, camera.z = %f\n", self.camera.x, self.camera.y, self.camera.z);
+    printf("cursor.x: %f, cursor.y: %f\n", self.cursor.x, self.cursor.y);
+#endif
   }
 }
 
@@ -171,8 +189,12 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 static void cursor_callback(GLFWwindow* window, double x, double y)
 {
   (void)window;
-  self.cursor.x = (int)x;
-  self.cursor.y = (int)y;
+  float dx = (float)x - self.cursor.last_x,
+        dy = (float)y - self.cursor.last_y;
+  self.cursor.last_x = (float)x;
+  self.cursor.last_y = (float)y;
+  self.cursor.x += dx * self.cursor.scale;
+  self.cursor.y += dy * self.cursor.scale;
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

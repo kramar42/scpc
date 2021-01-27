@@ -25,15 +25,11 @@ void scene_init(Scene* scene)
   if (scene->vs_shader && scene->fs_shader)
   {
     scene->shader = gl_program(scene->vs_shader, scene->fs_shader);
-    glUseProgram(scene->shader);
   }
   else
   {
     scene->shader = 0;
   }
-
-  // wireframe mode
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   scene->vertices = NULL;
   scene->indices  = NULL;
@@ -47,11 +43,22 @@ void scene_clear(Scene* scene)
 
 void scene_render(Scene* scene)
 {
+  glPolygonMode(GL_FRONT_AND_BACK, scene->polygon_mode);
   glUseProgram(scene->shader);
   glBindVertexArray(scene->vao);
   glBufferData(GL_ARRAY_BUFFER,         arrlenu(scene->vertices)*sizeof(scene->vertices[0]), scene->vertices, GL_STATIC_DRAW);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, arrlenu(scene->indices)*sizeof(scene->indices[0]),   scene->indices,  GL_STATIC_DRAW);
   glDrawElements(GL_TRIANGLES,     (int)arrlenu(scene->indices), GL_UNSIGNED_INT, 0);
+}
+
+void scene_perspective(Scene* scene, const float focal)
+{
+  scene_ufloat(scene, "focal",  focal);
+  scene_ufloat(scene, "aspect", self.window.aspect);
+  scene_ufloat(scene, "width",  self.window.width  / 2.0f);
+  scene_ufloat(scene, "height", self.window.height / 2.0f);
+  scene_ufloat(scene, "front",   0.1f);
+  scene_ufloat(scene, "depth",  self.window.depth  / 2.0f);
 }
 
 void scene_ufloat(Scene* scene, const char* uniform, float value)

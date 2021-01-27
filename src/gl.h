@@ -18,6 +18,7 @@ typedef struct {
 void        gl_init          (GL* gl);
 void        gl_add_scene     (GL* gl, Scene* scene);
 bool        gl_running       (GL* gl);
+void        gl_clear         (GL* gl);
 void        gl_update        (GL* gl);
 void        gl_update_camera (GL* gl);
 

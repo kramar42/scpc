@@ -178,10 +178,10 @@ GA3p ga3_transform(GA3 r, const GA3 trans, const GA3 elem)
 GA3p ga3_combine(GA3 r, const GA3** trs, size_t n)
 {
   assert(n > 0);
-  GA3 tmp[2] = {{0}, {0}};
+  GA3 tmp[2];
   ga3_sadd(tmp[0], 0, *trs[0]);
   for (size_t i = 1; i < n; i++)
-    ga3_mul(tmp[i%2], tmp[(i-1)%2], *trs[i]);
+    ga3_mul(tmp[i%2], *trs[i], tmp[(i-1)%2]); //, *trs[i]);
   return ga3_sadd(r, 0, tmp[(n-1)%2]);
 }
 

@@ -1,7 +1,7 @@
 #version 330 core
 layout (location = 0) in vec3 position;
 out vec3 PositionColor;
-uniform float focal, width, height, near, far;
+uniform float focal, width, height, depth, front;
 uniform float trans[16];
 
 // The geometric product (*)
@@ -84,7 +84,7 @@ vec4 ga3_vec4(float elem[16])
   return vec4(
     view.x * focal / width,
     view.y * focal / height,
-    (view.z - near) / (far - near) * (far + near) - near,
+    (view.z - front) / (depth - front) * (depth + front) - front,
     view.z);
 };
 
