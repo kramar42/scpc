@@ -16,44 +16,28 @@
 #define XY_ASPECT     (16.0f / 9.0f)
 #define XZ_ASPECT     (16.0f / 9.0f)
 #define SIZE          (1920 * 1)
-#define TRIANGLE_SIZE 0.005
 
-float* draw_triangle(float* vertices, GA2 center, GA2 dir)
+void draw_axis(Scene* scene)
 {
-  GA2 rotor, half_dir;
-  ga2_rotor(rotor, center, (float) M_PI / 3.f);
-  ga2_smul(half_dir, 0.5f, dir);
+  (void)scene;
 
-  GA2 p1, p2, p3;
+  float vertices[] = {
+      0,  -2,   0,
+    100,  -2,   0,
+      0, 100,   0,
+      0,  -2, 100,
+  };
 
-  if (ga2_distance(center, dir) < TRIANGLE_SIZE)
-  {
-    // printf("sanity check: %f %f\n", -center[5], center[4]);
-    ga2_add      (p1, center, dir);
-    ga2_add      (p1, p1, half_dir);
-    ga2_transform(p2, rotor,  p1);
-    ga2_transform(p3, rotor,  p2);
+  uint32_t offset = (uint32_t)arrlen(scene->vertices) / 3;
+  uint32_t indices[] = {
+    0, 1, 0, 2, 0, 3,
+  };
 
-    arrput(vertices, -p1[5]);
-    arrput(vertices,  p1[4]);
-    arrput(vertices,  1.0f);
-    arrput(vertices, -p2[5]);
-    arrput(vertices,  p2[4]);
-    arrput(vertices,  1.0f);
-    arrput(vertices, -p3[5]);
-    arrput(vertices,  p3[4]);
-    arrput(vertices,  1.0f);
-    return vertices;
-  }
+  for (size_t i = 0; i < 3 * 8; i++)
+    arrput(scene->vertices, vertices[i]);
 
-  ga2_add      (p1, center, dir);
-  ga2_transform(p2, rotor,  p1);
-  ga2_transform(p3, rotor,  p2);
-
-  vertices = draw_triangle(vertices, p1, half_dir);
-  vertices = draw_triangle(vertices, p2, half_dir);
-  vertices = draw_triangle(vertices, p3, half_dir);
-  return vertices;
+  for (size_t i = 0; i < 3 * 2 * 6; i++)
+    arrput(scene->indices, indices[i] + offset);
 }
 
 void draw_cube(Scene* scene, GA3 point, float size)
@@ -89,19 +73,6 @@ void draw_cube(Scene* scene, GA3 point, float size)
     arrput(scene->indices, indices[i] + offset);
 }
 
-// сделать углы фрустума подвижными. они напрямую привязаны к текущей проекции
-// чтобы понимать что происходит - в углу привычная проекция показывает фрустум
-float* draw_frustum(float* v, GA3 line, float* params)
-{
-  (void)v;(void)line;(void)params;
-  return v;
-}
-
-// left mouse click - select
-// left mouse drag - drag the world
-// right mouse click - meta
-// right mouse drag - perspective
-// middle click - toggle perspective lock
 int main()
 {
   GA3 position, forward, right, up;
@@ -109,7 +80,6 @@ int main()
   ga3_id(forward, ga3_e021);
   ga3_id(right, ga3_e032);
   ga3_id(up, ga3_e013);
-  // ga3_add(position, position, ga3_e021);
 
   self = (Mind) {
     .window = {
@@ -141,24 +111,21 @@ int main()
 
   GL gl; gl_init(&gl);
 
-  /*
-  Scene cube = (Scene) {
-    .vs_shader    = "shaders/cube.vs.glsl",
-    .fs_shader    = "shaders/position.fs.glsl",
-    .polygon_mode = GL_FILL,
+  Scene axis = (Scene) {
+    .vs_shader      = "shaders/cube.vs.glsl",
+    .fs_shader      = "shaders/position.fs.glsl",
+    .primitive_type = GL_LINES,
   };
-  scene_init(&cube);
-  scene_perspective(&cube, 500.0f);
-  gl_add_scene(&gl, &cube);
-  */
+  scene_init(&axis);
+  scene_perspective(&axis, 1000.0f);
+  gl_add_scene(&gl, &axis);
 
   Scene debug = (Scene) {
-    .vs_shader    = "shaders/cube.vs.glsl",
-    .fs_shader    = "shaders/position.fs.glsl",
-    .polygon_mode = GL_LINE,
+    .vs_shader      = "shaders/cube.vs.glsl",
+    .fs_shader      = "shaders/position.fs.glsl",
   };
   scene_init(&debug);
-  scene_perspective(&debug, 2000.0f);
+  scene_perspective(&debug, 1000.0f);
   gl_add_scene(&gl, &debug);
 
   // done with init. define some elements
@@ -171,8 +138,8 @@ int main()
     gl_clear(&gl);
 
     // [-1; +1]
-    // float cursor_x = -(float)self.cursor.x / self.window.width  * 2 + 1;
-    // float cursor_y = -(float)self.cursor.y / self.window.height * 2 + 1;
+    // float cursor_x = -(float)self.cursor.last_x / self.window.width  * 2 + 1;
+    // float cursor_y = -(float)self.cursor.last_y / self.window.height * 2 + 1;
     // float scroll   =  (float)self.cursor.scroll;
 
 #if 1
@@ -223,17 +190,10 @@ int main()
     ga3_combine(trans, transl, sizeof(transl) / sizeof(transl[0]));
 #endif
 
-#if 0
-    // sierpinski
-    GA2 cursor, dir;
-    ga2_point(cursor, cursor_x, cursor_y);
-    ga2_sub  (dir, cursor, origin2);
-
-    draw_triangle(&debug, origin2, dir);
-#endif
+    draw_axis(&axis);
 
     // setup scene
-    // scene_umat4 (&cube, "trans",  trans);
+    scene_umat4 (&axis,  "trans",  trans);
     scene_umat4 (&debug, "trans",  trans);
     // render
     gl_update(&gl);

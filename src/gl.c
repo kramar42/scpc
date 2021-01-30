@@ -85,6 +85,11 @@ void gl_clear(GL* gl)
     scene_clear(gl->scenes[i]);
 }
 
+/* left mouse click - select
+   left mouse drag - drag the world
+   right mouse click - meta
+   right mouse drag - perspective
+   middle click - toggle perspective lock */
 void update_camera(GL* gl)
 {
   if (glfwGetKey(gl->window, GLFW_KEY_X))
@@ -116,7 +121,7 @@ void update_camera(GL* gl)
   // todo multiply with last_fps
   ga3_smul(delta, self.camera.speed, delta);
   ga3_add(self.camera.position, self.camera.position, delta);
-  ga3_print(self.camera.position);
+  // ga3_print(self.camera.position);
 
   // mouse rotations
   double xpos, ypos;
@@ -135,7 +140,7 @@ void update_camera(GL* gl)
   // rotate around up
   if (fabs(dx) > 0.1)
   {
-    printf("time to rotate!\n");
+    // printf("time to rotate!\n");
     ga3_transform(self.camera.forward, rot_x, self.camera.forward);
     ga3_transform(self.camera.right,   rot_x, self.camera.right);
   }
@@ -189,7 +194,7 @@ void gl_update(GL* gl)
       for (size_t i = 0; i < arrlenu(gl->scenes); i++)
         indices += arrlenu(gl->scenes[i]->indices);
       // assume all scenes were drawing triangles
-      printf("drawing %zd triangles\n", indices / 3); //, indices * sizeof(float) / 1024.f / 1024.f);
+      printf("drawing %zd vertices\n", indices); //, indices * sizeof(float) / 1024.f / 1024.f);
     }
 #ifdef DEBUG
     // printf("camera.x = %f, camera.y = %f, camera.z = %f\n", self.camera.x, self.camera.y, self.camera.z);

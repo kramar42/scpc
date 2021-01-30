@@ -5,6 +5,16 @@
 
 void scene_init(Scene* scene)
 {
+  // shaders
+  if (scene->vs_shader && scene->fs_shader)
+  {
+    scene->shader = gl_program(scene->vs_shader, scene->fs_shader);
+  }
+  else
+  {
+    scene->shader = 0;
+  }
+
   // vertex layout
   glGenVertexArrays(1, &scene->vao);
   glBindVertexArray(scene->vao);
@@ -18,21 +28,17 @@ void scene_init(Scene* scene)
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, scene->ebo);
 
   // 3 floats per fertex, layout (location=0)
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
-
-  // shaders
-  if (scene->vs_shader && scene->fs_shader)
-  {
-    scene->shader = gl_program(scene->vs_shader, scene->fs_shader);
-  }
-  else
-  {
-    scene->shader = 0;
-  }
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
   scene->vertices = NULL;
   scene->indices  = NULL;
+
+  if (!scene->polygon_mode)
+    scene->polygon_mode = GL_LINE;
+
+  if (!scene->primitive_type)
+    scene->primitive_type = GL_TRIANGLES;
 }
 
 void scene_clear(Scene* scene)
@@ -46,9 +52,10 @@ void scene_render(Scene* scene)
   glPolygonMode(GL_FRONT_AND_BACK, scene->polygon_mode);
   glUseProgram(scene->shader);
   glBindVertexArray(scene->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, scene->vbo);
   glBufferData(GL_ARRAY_BUFFER,         arrlenu(scene->vertices)*sizeof(scene->vertices[0]), scene->vertices, GL_STATIC_DRAW);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, arrlenu(scene->indices)*sizeof(scene->indices[0]),   scene->indices,  GL_STATIC_DRAW);
-  glDrawElements(GL_TRIANGLES,     (int)arrlenu(scene->indices), GL_UNSIGNED_INT, 0);
+  glDrawElements(scene->primitive_type, (int)arrlenu(scene->indices), GL_UNSIGNED_INT, 0);
 }
 
 void scene_perspective(Scene* scene, const float focal)

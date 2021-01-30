@@ -7,6 +7,7 @@ typedef struct {
   const char* vs_shader;
   const char* fs_shader;
   uint32_t    polygon_mode;
+  uint32_t    primitive_type;
 
   uint32_t    vao;
   uint32_t    vbo;
