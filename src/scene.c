@@ -57,8 +57,8 @@ void scene_perspective(Scene* scene, const float focal)
   scene_ufloat(scene, "aspect", self.window.aspect);
   scene_ufloat(scene, "width",  self.window.width  / 2.0f);
   scene_ufloat(scene, "height", self.window.height / 2.0f);
-  scene_ufloat(scene, "front",   0.1f);
   scene_ufloat(scene, "depth",  self.window.depth  / 2.0f);
+  scene_ufloat(scene, "front",  self.window.front);
 }
 
 void scene_ufloat(Scene* scene, const char* uniform, float value)

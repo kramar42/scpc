@@ -30,6 +30,7 @@ static const GA3 ga3_e0123     = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 void         ga3_print           (const GA3 a);
 
 // constructors
+GA3p         ga3_id              (GA3 r, const GA3 a);
 GA3p         ga3_point           (GA3 p, const float x,   const float y,      const float z);
 GA3p         ga3_plane           (GA3 p, const float x,   const float y,      const float z, const float w);
 GA3p         ga3_rotor           (GA3 r, const GA3 line,  const float angle);
@@ -93,6 +94,28 @@ void ga3_print(const GA3 a)
   }
   if (n == 0) printf("0");
   printf("\n");
+}
+
+GA3p ga3_id(GA3 r, const GA3 a)
+{
+  r[ 0] = a[ 0];
+  r[ 1] = a[ 1];
+  r[ 2] = a[ 2];
+  r[ 3] = a[ 3];
+  r[ 4] = a[ 4];
+  r[ 5] = a[ 5];
+  r[ 6] = a[ 6];
+  r[ 7] = a[ 7];
+  r[ 8] = a[ 8];
+  r[ 9] = a[ 9];
+  r[10] = a[10];
+  r[11] = a[11];
+  r[12] = a[12];
+  r[13] = a[13];
+  r[14] = a[14];
+  r[15] = a[15];
+  return r;
+
 }
 
 // PGA points are trivectors.
@@ -166,11 +189,12 @@ GA3p ga3_translator(GA3 t, const GA3 line, const float dist)
 
 GA3p ga3_transform(GA3 r, const GA3 trans, const GA3 elem)
 {
-  GA3 a = {0}, b = {0};
+  GA3 e, a, b;
+  ga3_id(e, elem);
   return ga3_mul(r,
     ga3_mul(a,
       trans,
-      elem),
+      e),
     ga3_reverse(b,
       trans));
 }
@@ -200,18 +224,6 @@ GA3p ga3_circle(GA3 r, const GA3 line, const float radius, const float t)
       radius));
 }
 
-// Norm
-float ga3_norm(const GA3 x)
-{
-  GA3 a = {0}, b = {0};
-  return sqrtf(fabsf(
-    ga3_mul(a,
-      ga3_conjugate(b,
-        x),
-      x)
-    [0]));
-}
-
 // a torus is now the product of two circles.
 GA3p ga_torus(GA3 r, const float s, const float t, const float r1, const GA3 l1, const float r2, const GA3 l2)
 {
@@ -237,6 +249,18 @@ GA3p ga_point_on_torus(GA3 r, const float s, const float t)
   return ga3_transform(r, to, ga3_e123);
 }
 
+// Norm
+float ga3_norm(const GA3 x)
+{
+  GA3 a, b;
+  return sqrtf(fabsf(
+    ga3_mul(a,
+      ga3_conjugate(b,
+        x),
+      x)
+    [0]));
+}
+
 // Inverse norm
 float ga3_inorm(const GA3 x)
 {
@@ -247,7 +271,7 @@ float ga3_inorm(const GA3 x)
 }
 
 // ???
-float ga3_distance (const GA3 a, const GA3 b)
+float ga3_distance(const GA3 a, const GA3 b)
 {
   GA3 d = {0};
   return ga3_norm(
@@ -255,12 +279,23 @@ float ga3_distance (const GA3 a, const GA3 b)
       a, b));
 }
 
+float ga3_angle(const GA3 a, const GA3 b)
+{
+  GA3 na, nb, r;
+  ga3_dot(r,
+    ga3_normalized(na, a),
+    ga3_normalized(nb, b));
+  return acosf(r[0]);
+}
+
 // Normalize
 GA3p ga3_normalized(GA3 r, const GA3 x)
 {
-  float n = 1 / ga3_norm(x);
-  return ga3_muls(r,
-    x, n);
+  float n = ga3_norm(x);
+  if (n == 0) return ga3_id(r, x);
+
+  return ga3_smul(r,
+    1/n, x);
 }
 
 // Reverse the order of the basis blades (~)

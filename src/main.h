@@ -31,18 +31,17 @@ typedef struct {
 } Stats;
 
 typedef struct {
-  GA3p        looking_at;
+  GA3p        position;
+  GA3p        forward;
+  GA3p        right;
+  GA3p        up;
   float       speed;
-  float       x;
-  float       y;
-  float       z;
+  float       sensitivity;
 } Camera;
 
 typedef struct {
   float       last_x;
-  float       x;
   float       last_y;
-  float       y;
   float       scroll;
   float       scale;
 } Cursor;

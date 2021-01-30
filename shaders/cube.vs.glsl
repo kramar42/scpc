@@ -24,7 +24,7 @@ float[16] ga3_mul(float r[16], const float a[16], const float b[16])
   r[14] = b[14]*a[0] + b[10]*a[2] + b[ 9]*a[3] + b[ 8]*a[4] + b[ 4]*a[8] + b[ 3]*a[9] + b[ 2]*a[10] + b[ 0]*a[14];
   r[15] = b[15]*a[0] + b[14]*a[1] + b[13]*a[2] + b[12]*a[3] + b[11]*a[4] + b[10]*a[5] + b[ 9]*a[ 6] + b[ 8]*a[ 7] + b[ 7]*a[8] + b[ 6]*a[9] + b[ 5]*a[10] - b[ 4]*a[11] - b[ 3]*a[12] - b[ 2]*a[13] - b[ 1]*a[14] + b[ 0]*a[15];
   return r;
-};
+}
 // Reverse the order of the basis blades (~)
 float[16] ga3_reverse(float r[16], const float a[16])
 {
@@ -45,7 +45,7 @@ float[16] ga3_reverse(float r[16], const float a[16])
   r[14] = -a[14];
   r[15] =  a[15];
   return r;
-};
+}
 float[16] ga3_transform(float r[16], float trans[16], float elem[16])
 {
   float[16] a;
@@ -56,7 +56,7 @@ float[16] ga3_transform(float r[16], float trans[16], float elem[16])
       elem),
     ga3_reverse(b,
       trans));
-};
+}
 float[16] vec3_ga3(float r[16], vec3 a)
 {
   r[ 0] = 0;
@@ -86,7 +86,7 @@ vec4 ga3_vec4(float elem[16])
     view.y * focal / height,
     (view.z - front) / (depth - front) * (depth + front) - front,
     view.z);
-};
+}
 
 void main()
 {
