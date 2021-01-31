@@ -16,27 +16,31 @@
 #define XY_ASPECT     (16.0f / 9.0f)
 #define XZ_ASPECT     (16.0f / 9.0f)
 #define SIZE          (1920 * 1)
+#define arrsize(ARR)  (sizeof(ARR)/sizeof(ARR[0]))
 
 void draw_axis(Scene* scene)
 {
-  (void)scene;
+  float scale = 100;
 
   float vertices[] = {
-      0,  -2,   0,
-    100,  -2,   0,
-      0, 100,   0,
-      0,  -2, 100,
+    // xyz               // color
+        0,     0,     0, // 0 ,   0,   0,
+    scale,     0,     0, //255,   0,   0,
+        0, scale,     0, //  0, 255,   0,
+        0,     0, scale, //  0,   0, 255,
   };
 
-  uint32_t offset = (uint32_t)arrlen(scene->vertices) / 3;
+  int vertex_size = 3;
+
+  uint32_t offset = (uint32_t)arrlen(scene->vertices) / vertex_size;
   uint32_t indices[] = {
     0, 1, 0, 2, 0, 3,
   };
 
-  for (size_t i = 0; i < 3 * 8; i++)
+  for (size_t i = 0; i < arrsize(vertices); i++)
     arrput(scene->vertices, vertices[i]);
 
-  for (size_t i = 0; i < 3 * 2 * 6; i++)
+  for (size_t i = 0; i < arrsize(indices); i++)
     arrput(scene->indices, indices[i] + offset);
 }
 
@@ -66,20 +70,16 @@ void draw_cube(Scene* scene, GA3 point, float size)
     7, 6, 5, 5, 4, 7,    // top    (t)
   };
 
-  for (size_t i = 0; i < 3 * 8; i++)
+  for (size_t i = 0; i < arrsize(vertices); i++)
     arrput(scene->vertices, vertices[i]);
 
-  for (size_t i = 0; i < 3 * 2 * 6; i++)
+  for (size_t i = 0; i < arrsize(indices); i++)
     arrput(scene->indices, indices[i] + offset);
 }
 
 int main()
 {
-  GA3 position, forward, right, up;
-  ga3_id(position, ga3_e123);
-  ga3_id(forward, ga3_e021);
-  ga3_id(right, ga3_e032);
-  ga3_id(up, ga3_e013);
+  GA3 p, f, r, u;
 
   self = (Mind) {
     .window = {
@@ -97,12 +97,12 @@ int main()
       .tick        = 2,
     },
     .camera = {
-      .position    = position,
-      .forward     = forward,
-      .right       = right,
-      .up          = up,
+      .position    = ga3_point(p, 0.5f, 1.5f, -4.5f),
+      .forward     = ga3_id   (f, ga3_e021),
+      .right       = ga3_id   (r, ga3_e032),
+      .up          = ga3_id   (u, ga3_e013),
       .speed       = 0.03f,
-      .sensitivity = 0.0005f,
+      .sensitivity = 0.001f,
     },
     .cursor = {
       .scale       = 1.0f,
@@ -117,7 +117,6 @@ int main()
     .primitive_type = GL_LINES,
   };
   scene_init(&axis);
-  scene_perspective(&axis, 1000.0f);
   gl_add_scene(&gl, &axis);
 
   Scene debug = (Scene) {
@@ -125,72 +124,85 @@ int main()
     .fs_shader      = "shaders/position.fs.glsl",
   };
   scene_init(&debug);
-  scene_perspective(&debug, 1000.0f);
   gl_add_scene(&gl, &debug);
-
-  // done with init. define some elements
-  GA2 origin2; ga2_point(origin2, 0.0f, 0.0f);
-  GA3 origin3; ga3_point(origin3, 0.0f, 0.0f, 0.0f);
-  GA3 center;  ga3_point(center,  5.0f, 0.0f, 5.0f);
 
   while (gl_running(&gl))
   {
     gl_clear(&gl);
+    gl_pool(&gl);
 
     // [-1; +1]
     // float cursor_x = -(float)self.cursor.last_x / self.window.width  * 2 + 1;
     // float cursor_y = -(float)self.cursor.last_y / self.window.height * 2 + 1;
     // float scroll   =  (float)self.cursor.scroll;
 
-#if 1
-    draw_cube(&debug, origin3, 1.0f);
-    draw_cube(&debug, center,  1.0f);
-    // cube that rotates around origin in a direction camera is facing
-    GA3 direction; ga3_add(direction, origin3, self.camera.forward);
-    draw_cube(&debug, direction, 0.3f);
-    // line of cubes to test perspective
-    GA3 center; ga3_point(center, -5.0f, 0.5f, -5.0f);
-    for (size_t i = 0; i < 10; i++)
+    draw_axis(&axis);
+
+    // draw cubes
     {
-      ga3_add(center, center, self.camera.forward);
-      draw_cube(&debug, center, 0.3f);
+      GA3 target;    ga3_point(target,  5.0f, 0.0f,  5.0f);
+      GA3 left;      ga3_point(left,   -5.0f, 0.5f, -5.0f);
+      GA3 direction; ga3_add  (direction, ga3_e123, self.camera.forward);
+
+      // cube at origin
+      draw_cube(&debug, (GA3p)ga3_e123, 1.0f);
+      // cube shifted right and forward
+      draw_cube(&debug, target,  1.0f);
+      // cube that rotates around origin in a direction camera is facing
+      draw_cube(&debug, direction, 0.3f);
+      // directions of cubes
+      for (size_t i = 0; i < 10; i++)
+      {
+        ga3_add(left, left, self.camera.forward);
+        draw_cube(&debug, left, 0.3f);
+      }
+      ga3_point(left,  -5.0f, 0.5f, -5.0f);
+      for (size_t i = 0; i < 10; i++)
+      {
+        ga3_add(left, left, self.camera.up);
+        draw_cube(&debug, left, 0.3f);
+      }
+      ga3_point(left,  -5.0f, 0.5f, -5.0f);
+      for (size_t i = 0; i < 10; i++)
+      {
+        ga3_add(left, left, self.camera.right);
+        draw_cube(&debug, left, 0.3f);
+      }
     }
 
-    // GA3 trans_x, trans_y, trans_z;
-    // ga3_translator(trans_x, ga3_e01, self.camera.x);
-    // ga3_translator(trans_y, ga3_e02, self.camera.y);
-    // ga3_translator(trans_z, ga3_e03, self.camera.z);
-
     // position translation
-    GA3 dir_p; ga3_join(dir_p, origin3, self.camera.position);
-    GA3 dir_pi; ga3_mul(dir_pi, dir_p, ga3_e0123);
-    float dist_p = ga3_distance(origin3, self.camera.position);
-    GA3 trans_p; ga3_translator(trans_p, dir_pi, dist_p);
+    GA3 dir_l; ga3_join(dir_l, ga3_e123, self.camera.position);
+    GA3 dir_il; ga3_mul(dir_il, dir_l, ga3_e0123);
+    float dist_p = ga3_distance(ga3_e123, self.camera.position);
+    GA3 trans_p; ga3_translator(trans_p, dir_il, dist_p);
 
-    // forward is down Z axis
-    GA3 rot_line, rot_plane, rot_axis, rot_forward;
-    ga3_join(rot_line, origin3, self.camera.forward);
-    float rot_angle = ga3_angle(rot_line, ga3_e12) / 2;
+    // rotation that moves Z axis (e12) to be `forward` direction
+    GA3 rot_line;  ga3_join(rot_line,  ga3_e123,  self.camera.forward);
+    GA3 rot_plane; ga3_join(rot_plane, ga3_e021, rot_line); //,  ga3_e021);
+    GA3 rot_axis;  ga3_dot (rot_axis,  rot_plane, ga3_e123);
+
+    float rot_angle = ga3_angle(rot_line, ga3_e12);
+    GA3 rot_forward;  ga3_rotor(rot_forward, rot_axis, rot_angle / 2);
+
+#ifdef DEBUG
+    printf("angle is %f, %f\n", rot_angle, rot_angle * 180.0f / M_PI);
+#endif
+
+    // fix roll of `up` direction
+    GA3 new_up; ga3_transform(new_up, rot_forward, ga3_e31);
+    GA3 up_dir; ga3_join     (up_dir, ga3_e123, self.camera.up);
+    rot_angle = ga3_angle    (new_up, up_dir);
+    GA3 rot_up; ga3_rotor    (rot_up, self.camera.forward, rot_angle / 2);
     // printf("angle is %f, %f\n", rot_angle, rot_angle * 180.0f / M_PI);
-    ga3_join(rot_plane, rot_line, ga3_e021);
-    // that's fun...
-    // ga3_dot(rot_axis, rot_line, origin3);
-    ga3_dot(rot_axis, rot_plane, origin3);
-    ga3_rotor(rot_forward, rot_axis, rot_angle);
-    // ga3_rotor(rot_y, ga3_e23,  cursor_y);
 
     // transformations are in order
     GA3 trans;
     const GA3* transl[] = {
-      // &rot_y,
-      // &rot_z,
       &trans_p,
       &rot_forward,
+      // &rot_up,
     };
     ga3_combine(trans, transl, sizeof(transl) / sizeof(transl[0]));
-#endif
-
-    draw_axis(&axis);
 
     // setup scene
     scene_umat4 (&axis,  "trans",  trans);

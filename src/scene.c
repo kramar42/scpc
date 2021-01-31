@@ -5,15 +5,18 @@
 
 void scene_init(Scene* scene)
 {
-  // shaders
-  if (scene->vs_shader && scene->fs_shader)
-  {
-    scene->shader = gl_program(scene->vs_shader, scene->fs_shader);
-  }
-  else
-  {
-    scene->shader = 0;
-  }
+  scene->vertices = NULL;
+  scene->indices  = NULL;
+
+  // defaults
+  if (!scene->polygon_mode)
+    scene->polygon_mode = GL_LINE;
+
+  if (!scene->primitive_type)
+    scene->primitive_type = GL_TRIANGLES;
+
+  if (!scene->focal_length)
+    scene->focal_length = 1000.0f;
 
   // vertex layout
   glGenVertexArrays(1, &scene->vao);
@@ -31,14 +34,25 @@ void scene_init(Scene* scene)
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-  scene->vertices = NULL;
-  scene->indices  = NULL;
+  // shaders
+  if (scene->vs_shader && scene->fs_shader)
+  {
+    scene->shader = gl_program(scene->vs_shader, scene->fs_shader);
+  }
+  else
+  {
+    scene->shader = 0;
+  }
 
-  if (!scene->polygon_mode)
-    scene->polygon_mode = GL_LINE;
+  // perspective
+  scene_ufloat(scene, "focal",  scene->focal_length);
+  scene_ufloat(scene, "aspect", self.window.aspect);
+  scene_ufloat(scene, "width",  self.window.width  / 2.0f);
+  scene_ufloat(scene, "height", self.window.height / 2.0f);
+  scene_ufloat(scene, "depth",  self.window.depth  / 2.0f);
+  scene_ufloat(scene, "front",  self.window.front);
 
-  if (!scene->primitive_type)
-    scene->primitive_type = GL_TRIANGLES;
+  glBindVertexArray(0);
 }
 
 void scene_clear(Scene* scene)
@@ -52,20 +66,11 @@ void scene_render(Scene* scene)
   glPolygonMode(GL_FRONT_AND_BACK, scene->polygon_mode);
   glUseProgram(scene->shader);
   glBindVertexArray(scene->vao);
-  glBindBuffer(GL_ARRAY_BUFFER, scene->vbo);
+  // TODO: why this needs rebinding after vao?
+  glBindBuffer(GL_ARRAY_BUFFER,         scene->vbo);
   glBufferData(GL_ARRAY_BUFFER,         arrlenu(scene->vertices)*sizeof(scene->vertices[0]), scene->vertices, GL_STATIC_DRAW);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, arrlenu(scene->indices)*sizeof(scene->indices[0]),   scene->indices,  GL_STATIC_DRAW);
   glDrawElements(scene->primitive_type, (int)arrlenu(scene->indices), GL_UNSIGNED_INT, 0);
-}
-
-void scene_perspective(Scene* scene, const float focal)
-{
-  scene_ufloat(scene, "focal",  focal);
-  scene_ufloat(scene, "aspect", self.window.aspect);
-  scene_ufloat(scene, "width",  self.window.width  / 2.0f);
-  scene_ufloat(scene, "height", self.window.height / 2.0f);
-  scene_ufloat(scene, "depth",  self.window.depth  / 2.0f);
-  scene_ufloat(scene, "front",  self.window.front);
 }
 
 void scene_ufloat(Scene* scene, const char* uniform, float value)

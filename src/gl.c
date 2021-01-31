@@ -4,15 +4,17 @@
 #include <stdio.h>
 #include <stb_ds.h>
 
-static void error_callback(int code, const char* description);
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-static void cursor_callback(GLFWwindow* window, double x, double y);
+static void update_camera    (GL* gl);
+
+static void error_callback (int code, const char* description);
+static void window_callback(GLFWwindow* window, int width, int height);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+static uint32_t gl_shader(const char* shader_filename, uint32_t shader_type);
 static void gl_check_shader(uint32_t sid);
 static void gl_check_program(uint32_t pid);
-static uint32_t gl_shader(const char* shader_filename, uint32_t shader_type);
 
-float sum(float acc, float val)
+static float sum(float acc, float val)
 {
   return acc + val;
 }
@@ -45,7 +47,7 @@ void gl_init(GL* gl)
     glfwSetInputMode(gl->window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
   // callbacks
-  glfwSetFramebufferSizeCallback(gl->window, framebuffer_size_callback);
+  glfwSetFramebufferSizeCallback(gl->window, window_callback);
   glfwSetScrollCallback(gl->window, scroll_callback);
 
   // load gl
@@ -85,83 +87,110 @@ void gl_clear(GL* gl)
     scene_clear(gl->scenes[i]);
 }
 
+void gl_pool(GL* gl)
+{
+  glfwPollEvents();
+  update_camera(gl);
+}
+
 /* left mouse click - select
    left mouse drag - drag the world
    right mouse click - meta
    right mouse drag - perspective
    middle click - toggle perspective lock */
-void update_camera(GL* gl)
+static void update_camera(GL* gl)
 {
   if (glfwGetKey(gl->window, GLFW_KEY_X))
     glfwSetWindowShouldClose(gl->window, GLFW_TRUE);
 
   // WASD
-  GA3 tmp, delta = {0};
-  if (glfwGetKey(gl->window, GLFW_KEY_E))
   {
-    ga3_smul(tmp,  1, self.camera.forward);
-    ga3_add(delta, delta, tmp);
-  }
-  if (glfwGetKey(gl->window, GLFW_KEY_D))
-  {
-    ga3_smul(tmp, -1, self.camera.forward);
-    ga3_add(delta, delta, tmp);
-  }
-  if (glfwGetKey(gl->window, GLFW_KEY_F))
-  {
-    ga3_smul(tmp,  1, self.camera.right);
-    ga3_add(delta, delta, tmp);
-  }
-  if (glfwGetKey(gl->window, GLFW_KEY_S))
-  {
-    ga3_smul(tmp, -1, self.camera.right);
-    ga3_add(delta, delta, tmp);
-  }
+    GA3 tmp, delta = {0};
+    if (glfwGetKey(gl->window, GLFW_KEY_E))
+    {
+      ga3_smul(tmp,  1, self.camera.forward);
+      ga3_add(delta, delta, tmp);
+    }
+    if (glfwGetKey(gl->window, GLFW_KEY_D))
+    {
+      ga3_smul(tmp, -1, self.camera.forward);
+      ga3_add(delta, delta, tmp);
+    }
+    if (glfwGetKey(gl->window, GLFW_KEY_F))
+    {
+      ga3_smul(tmp,  1, self.camera.right);
+      ga3_add(delta, delta, tmp);
+    }
+    if (glfwGetKey(gl->window, GLFW_KEY_S))
+    {
+      ga3_smul(tmp, -1, self.camera.right);
+      ga3_add(delta, delta, tmp);
+    }
+    if (glfwGetKey(gl->window, GLFW_KEY_SPACE))
+    {
+      ga3_smul(tmp,  1, self.camera.up);
+      ga3_add(delta, delta, tmp);
+    }
+    if (glfwGetKey(gl->window, GLFW_KEY_A))
+    {
+      ga3_smul(tmp, -1, self.camera.up);
+      ga3_add(delta, delta, tmp);
+    }
 
-  // todo multiply with last_fps
-  ga3_smul(delta, self.camera.speed, delta);
-  ga3_add(self.camera.position, self.camera.position, delta);
-  // ga3_print(self.camera.position);
+    // todo multiply with last_fps
+    ga3_smul(delta, self.camera.speed, delta);
+    ga3_add(self.camera.position, self.camera.position, delta);
+  }
 
   // mouse rotations
-  double xpos, ypos;
-  glfwGetCursorPos(gl->window, &xpos, &ypos);
-  float dx = (float)xpos - self.cursor.last_x,
-        dy = (float)ypos - self.cursor.last_y;
-  self.cursor.last_x = (float)xpos;
-  self.cursor.last_y = (float)ypos;
-
-  GA3 axis_up, axis_right, rot_x, rot_y;
-  ga3_join(axis_up,    ga3_e123,   self.camera.up);
-  ga3_join(axis_right, ga3_e123,   self.camera.right);
-  ga3_rotor(rot_x,     axis_up,    dx * self.camera.sensitivity);
-  ga3_rotor(rot_y,     axis_right, dy * self.camera.sensitivity);
-
-  // rotate around up
-  if (fabs(dx) > 0.1)
   {
-    // printf("time to rotate!\n");
+    double xpos, ypos;
+    glfwGetCursorPos(gl->window, &xpos, &ypos);
+    // don't jump camera on initial update
+    if (self.cursor.last_x == 0 && self.cursor.last_y == 0)
+    {
+      self.cursor.last_x = (float)xpos;
+      self.cursor.last_y = (float)ypos;
+      return;
+    }
+    float dx = (float)xpos - self.cursor.last_x,
+          dy = (float)ypos - self.cursor.last_y;
+    self.cursor.last_x = (float)xpos;
+    self.cursor.last_y = (float)ypos;
+
+    // rotate around up
+    GA3 axis_up; ga3_join (axis_up, ga3_e123, ga3_e013);
+    GA3 rot_x;   ga3_rotor(rot_x,   axis_up,  dx * self.camera.sensitivity);
     ga3_transform(self.camera.forward, rot_x, self.camera.forward);
     ga3_transform(self.camera.right,   rot_x, self.camera.right);
-  }
-  // rotate around right
-  if (fabs(dy) > 0.1)
-  {
-    // ga3_transform(self.camera.forward, rot_y, self.camera.forward);
+
+    // rotate around right
+    GA3 axis_right; ga3_join (axis_right, ga3_e123,   self.camera.right);
+    GA3 rot_y;      ga3_rotor(rot_y,      axis_right, dy * self.camera.sensitivity);
+    ga3_transform(self.camera.forward, rot_y, self.camera.forward);
     // ga3_transform(self.camera.up,      rot_y, self.camera.up);
   }
 
-  int state = glfwGetMouseButton(gl->window, GLFW_MOUSE_BUTTON_LEFT);
-  if (state == GLFW_PRESS)
+  // mouse clicks
   {
+    if (glfwGetMouseButton(gl->window, GLFW_MOUSE_BUTTON_LEFT))
+    {
+      printf("left mouse button\n");
+    }
+    if (glfwGetMouseButton(gl->window, GLFW_MOUSE_BUTTON_RIGHT))
+    {
+      printf("right mouse button\n");
+    }
+    if (glfwGetMouseButton(gl->window, GLFW_MOUSE_BUTTON_MIDDLE))
+    {
+      printf("middle mouse button\n");
+    }
   }
 }
 
 void gl_update(GL* gl)
 {
-  glfwPollEvents();
-  update_camera(gl);
-
+  // render
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
   if (gl->scenes)
@@ -197,8 +226,7 @@ void gl_update(GL* gl)
       printf("drawing %zd vertices\n", indices); //, indices * sizeof(float) / 1024.f / 1024.f);
     }
 #ifdef DEBUG
-    // printf("camera.x = %f, camera.y = %f, camera.z = %f\n", self.camera.x, self.camera.y, self.camera.z);
-    // printf("cursor.x: %f, cursor.y: %f\n", self.cursor.x, self.cursor.y);
+    ga3_print("camera.position=", self.camera.position);
 #endif
   }
 }
@@ -228,7 +256,7 @@ static void error_callback(int code, const char* description)
   error(description);
 }
 
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+static void window_callback(GLFWwindow* window, int width, int height)
 {
   (void)window;
   glViewport(0, 0, width, height);
@@ -245,6 +273,19 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 // HELPERS
+
+static uint32_t gl_shader(const char* shader_filename, uint32_t shader_type)
+{
+  size_t filesize;
+  const char* shader_source = slurp_file(shader_filename, &filesize);
+
+  uint32_t shader = glCreateShader(shader_type);
+  glShaderSource(shader, 1, &shader_source, NULL);
+  glCompileShader(shader);
+  gl_check_shader(shader);
+  free((void*)shader_source);
+  return shader;
+}
 
 static void gl_check_shader(uint32_t sid)
 {
@@ -270,17 +311,4 @@ static void gl_check_program(uint32_t pid)
     printf("program linkage failed\n");
     error(log);
   }
-}
-
-static uint32_t gl_shader(const char* shader_filename, uint32_t shader_type)
-{
-  size_t filesize;
-  const char* shader_source = slurp_file(shader_filename, &filesize);
-
-  uint32_t shader = glCreateShader(shader_type);
-  glShaderSource(shader, 1, &shader_source, NULL);
-  glCompileShader(shader);
-  gl_check_shader(shader);
-  free((void*)shader_source);
-  return shader;
 }

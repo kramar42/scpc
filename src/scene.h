@@ -8,6 +8,7 @@ typedef struct {
   const char* fs_shader;
   uint32_t    polygon_mode;
   uint32_t    primitive_type;
+  float       focal_length;
 
   uint32_t    vao;
   uint32_t    vbo;
@@ -21,7 +22,6 @@ typedef struct {
 void scene_init        (Scene* scene);
 void scene_clear       (Scene* scene);
 void scene_render      (Scene* scene);
-void scene_perspective (Scene* scene, const float focal);
 void scene_ufloat      (Scene* scene, const char* uniform, float value);
 void scene_umat4       (Scene* scene, const char* uniform, float value[16]);
 

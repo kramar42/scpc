@@ -30,6 +30,7 @@ static const GA2 ga2_e012      = { 0, 0, 0, 0, 0, 0, 0, 1 };
 void         ga2_print           (const GA2 a);
 
 // constructors
+GA2p         ga2_id              (GA2 r, const GA2 a);
 GA2p         ga2_point           (GA2 p, const float x,   const float y);
 GA2p         ga2_line            (GA2 l, const float x,   const float y,      const float z);
 GA2p         ga2_rotor           (GA2 r, const GA2 point, const float angle);

@@ -27,7 +27,7 @@ static const GA3 ga3_e123      = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
 static const GA3 ga3_e0123     = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 
 
-void         ga3_print           (const GA3 a);
+void         ga3_print           (const char* m, const GA3 a);
 
 // constructors
 GA3p         ga3_id              (GA3 r, const GA3 a);
@@ -75,8 +75,9 @@ GA3p         ga3_point_on_torus  (GA3 r, const float s, const float t);
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-void ga3_print(const GA3 a)
+void ga3_print(const char* msg, const GA3 a)
 {
+  printf("%s", msg);
   size_t n = 0;
   for (size_t i = 0, j = 0; i < 16; i++)
   {

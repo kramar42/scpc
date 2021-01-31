@@ -15,15 +15,12 @@ typedef struct {
   Channel*     fps;
 } GL;
 
+uint32_t    gl_program       (const char* vertex_filename, const char* fragment_filename);
 void        gl_init          (GL* gl);
 void        gl_add_scene     (GL* gl, Scene* scene);
 bool        gl_running       (GL* gl);
 void        gl_clear         (GL* gl);
+void        gl_pool          (GL* gl);
 void        gl_update        (GL* gl);
-void        gl_update_camera (GL* gl);
-
-uint32_t    gl_program       (const char* vertex_filename, const char* fragment_filename);
-void        gl_set_ufloat    (uint32_t program, const char* uniform, float value);
-void        gl_set_u2float   (uint32_t program, const char* uniform, float first, float second);
 
 #endif // _gl_h_

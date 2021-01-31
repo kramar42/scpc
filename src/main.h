@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define DEBUG 1
+// #define DEBUG 1
 
 #include "ga3.h"
 
