@@ -1,15 +1,5 @@
-#define STB_DS_IMPLEMENTATION
-#include <stb_ds.h>
-
-#define _ps_impl_
-#include "ps.h"
-#define _ga2_impl_
-#include "ga2.h"
-#define _ga3_impl_
-#include "ga3.h"
-
+#include "impls.h"
 #include "main.h"
-#include "plat.h"
 #include "gl.h"
 #include "scene.h"
 

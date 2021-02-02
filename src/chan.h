@@ -1,11 +1,7 @@
-#ifndef _ps_h_
-#define _ps_h_
+#ifndef _chan_h_
+#define _chan_h_
 
 #include <stdbool.h>
-
-typedef struct {
-  struct Cons* rest;
-} Cons;
 
 typedef struct {
   size_t  capacity;
@@ -19,13 +15,10 @@ size_t   chan_size  (Channel* chan);
 void     put_chan   (Channel* chan, float dataptr);
 float    reduce_chan(Channel* chan, float(*reducer)(float,float));
 
-#ifdef _ps_impl_
+#ifdef _chan_impl_
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "ps.h"
 
 Channel* new_chan(size_t capacity)
 {
@@ -62,5 +55,5 @@ float reduce_chan(Channel* chan, float(*reducer)(float,float))
   return result;
 }
 
-#endif // _ps_impl_
-#endif // _ps_h_
+#endif // _chan_impl_
+#endif // _chan_h_

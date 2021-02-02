@@ -44,6 +44,7 @@ GA3p         ga3_torus           (GA3 r, const float s,   const float t,      co
 float        ga3_norm            (const GA3 x);
 float        ga3_inorm           (const GA3 x);
 float        ga3_distance        (const GA3 a, const GA3 b);
+float        ga3_angle           (const GA3 a, const GA3 b);
 
 // unary
 GA3p         ga3_normalized      (GA3 r, const GA3   x);
@@ -72,6 +73,7 @@ GA3p         ga3_point_on_torus  (GA3 r, const float s, const float t);
 #ifdef _ga3_impl_
 
 #include <stdio.h>
+#include <assert.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 

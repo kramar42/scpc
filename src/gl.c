@@ -1,8 +1,9 @@
+#include <stdio.h>
+#include <stb_ds.h>
+
 #include "gl.h"
 #include "main.h"
 #include "plat.h"
-#include <stdio.h>
-#include <stb_ds.h>
 
 static void update_camera    (GL* gl);
 

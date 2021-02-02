@@ -1,11 +1,8 @@
 #ifndef _main_h_
 #define _main_h_
 
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-// #define DEBUG 1
 
 #include "ga3.h"
 

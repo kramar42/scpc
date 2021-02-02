@@ -1,7 +1,8 @@
 #include <stb_ds.h>
+
+#include "gl.h"
 #include "main.h"
 #include "scene.h"
-#include "gl.h"
 
 void scene_init(Scene* scene)
 {
