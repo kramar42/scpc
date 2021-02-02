@@ -1,6 +1,6 @@
 # prerequisites
 
-`python3` & `pip` to install `grad` package
+`python3` & `pip` to install `glad` package
 
 on windows: command line with `vcvars64.bat` to run `msbuild.exe`, `cl.exe` & `link.exe`
 

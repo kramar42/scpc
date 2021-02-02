@@ -9,3 +9,5 @@
 
 #define _plat_impl_
 #include "plat.h"
+
+#include "shaders.h"
